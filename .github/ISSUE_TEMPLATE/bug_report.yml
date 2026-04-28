@@ -1,0 +1,109 @@
+name: Bug 报告 / Bug Report
+description: 提交一个 Bug 报告，帮助我们改进项目 / Submit a bug report to help us improve
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢你提交 Bug 报告！请尽量填写以下信息，以便我们更快地定位和修复问题。
+
+        Thanks for submitting a bug report! Please fill in the details below so we can investigate the issue.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug 描述 / Description
+      description: 简要描述你遇到的问题 / Briefly describe the issue
+      placeholder: 请清晰地描述 Bug 的表现... / Describe the bug clearly...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤 / Steps to Reproduce
+      description: 请提供详细的复现步骤 / Provide detailed steps to reproduce
+      placeholder: |
+        1. 进入 '...' / Go to '...'
+        2. 点击 '...' / Click '...'
+        3. 输入 '...' / Enter '...'
+        4. 看到错误 / See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为 / Expected Behavior
+      description: 你期望发生什么？ / What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际行为 / Actual Behavior
+      description: 实际发生了什么？ / What actually happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: 截图 / 录屏 / Screenshots or Screen Recordings
+      description: 如果可以，请提供截图或录屏来帮助说明问题 / Attach screenshots or recordings if possible
+    validations:
+      required: false
+
+  - type: dropdown
+    id: model
+    attributes:
+      label: 使用的合成模式 / Synthesis Mode
+      options:
+        - 内置音色 / Built-in Voice (mimo-v2.5-tts)
+        - 声音设计 / Voice Design (mimo-v2.5-tts-voicedesign)
+        - 声音克隆 / Voice Clone (mimo-v2.5-tts-voiceclone)
+    validations:
+      required: false
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: 浏览器 / Browser
+      options:
+        - Chrome
+        - Firefox
+        - Safari
+        - Edge
+        - 其他 / Other
+    validations:
+      required: false
+
+  - type: input
+    id: browser-version
+    attributes:
+      label: 浏览器版本 / Browser Version
+      placeholder: 例如 / e.g. Chrome 120.0.6099.110
+    validations:
+      required: false
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: 操作系统 / Operating System
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - 其他 / Other
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: 补充信息 / Additional Context
+      description: 其他你认为有助于问题排查的信息（如控制台错误日志等）/ Any other context such as console error logs
+    validations:
+      required: false

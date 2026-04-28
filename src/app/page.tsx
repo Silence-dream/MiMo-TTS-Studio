@@ -442,6 +442,20 @@ export default function Home() {
         {/* History */}
         <HistoryList history={history} onPlay={handlePlayHistory} onDelete={handleDeleteHistory} />
       </div>
+
+      {/* Footer */}
+      <footer className="text-center py-6 text-xs" style={{ color: 'var(--foreground-secondary)' }}>
+        <a
+          href="https://github.com/Silence-dream/MiMo-TTS-Studio"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:underline transition-colors"
+          style={{ color: 'var(--accent)' }}
+        >
+          MiMo TTS Studio
+        </a>{' '}
+        © {new Date().getFullYear()} All Rights Reserved.
+      </footer>
     </div>
   );
 }
