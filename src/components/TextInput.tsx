@@ -1,7 +1,15 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { TTSModel } from '@/types/tts';
+
+// 示例文本
+const EXAMPLE_TEXT = `(怅然)这么多年过去了，再走过那条街，心里一下子空了一块。
+(慵懒)再让我睡五分钟……就五分钟，真的，最后一次。
+(磁性)夜已经深了，城市还在呼吸。我是今晚陪你的人，欢迎收听《午夜电台》。
+(东北话)哎呀妈呀，这天儿也忒冷了吧！你说这风，嗖嗖的，跟刀子似的，割脸啊！
+(粤语)呢个真係好正啊！食过一次就唔会忘记！
+(唱歌)原谅我这一生不羁放纵爱自由，也会怕有一天会跌倒，Oh no。背弃了理想，谁人都可以，哪会怕有一天只你共我。`;
 
 interface TextInputProps {
   model: TTSModel;
@@ -28,6 +36,21 @@ export default function TextInput({
   onClear,
 }: TextInputProps) {
   const isVoiceDesign = model === 'mimo-v2.5-tts-voicedesign';
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 处理 txt 文件上传
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      onAssistantContentChange(text);
+    };
+    reader.readAsText(file);
+    // 重置 input 以支持重复上传同一文件
+    e.target.value = '';
+  };
 
   // 计算字数和预估时长
   const stats = useMemo(() => {
@@ -104,6 +127,29 @@ export default function TextInput({
           placeholder="输入需要转换为语音的文本内容..."
           rows={5}
         />
+        <div className="flex gap-2 mt-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".txt"
+            className="hidden"
+            onChange={handleFileUpload}
+          />
+          <button
+            type="button"
+            className="btn btn-secondary text-xs !py-1.5 !px-3"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            📄 上传 TXT
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary text-xs !py-1.5 !px-3"
+            onClick={() => onAssistantContentChange(EXAMPLE_TEXT)}
+          >
+            💡 填入示例
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-4 mt-5">
