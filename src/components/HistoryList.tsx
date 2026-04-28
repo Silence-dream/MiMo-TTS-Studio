@@ -5,9 +5,10 @@ import { SynthesisHistory } from '@/types/tts';
 interface HistoryListProps {
   history: SynthesisHistory[];
   onPlay: (item: SynthesisHistory) => void;
+  onDelete: (id: string) => void;
 }
 
-export default function HistoryList({ history, onPlay }: HistoryListProps) {
+export default function HistoryList({ history, onPlay, onDelete }: HistoryListProps) {
   if (history.length === 0) {
     return (
       <div className="card">
@@ -46,15 +47,9 @@ export default function HistoryList({ history, onPlay }: HistoryListProps) {
         {history.map((item) => (
           <div
             key={item.id}
-            className="flex items-center gap-3 p-3 cursor-pointer transition-colors"
+            className="history-item flex items-center gap-3 p-3 cursor-pointer transition-colors"
             style={{ borderBottom: '1px solid var(--border)' }}
             onClick={() => onPlay(item)}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--card-hover)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'transparent';
-            }}
           >
             <button
               className="w-9 h-9 rounded-full flex items-center justify-center text-sm cursor-pointer flex-shrink-0 transition-all"
@@ -72,6 +67,21 @@ export default function HistoryList({ history, onPlay }: HistoryListProps) {
             <span className="text-xs flex-shrink-0" style={{ color: 'var(--muted)' }}>
               {new Date(item.createdAt).toLocaleTimeString()}
             </span>
+            <button
+              className="history-delete-btn w-7 h-7 rounded-full flex items-center justify-center text-xs cursor-pointer flex-shrink-0 transition-all opacity-0"
+              style={{
+                background: 'rgba(248, 113, 113, 0.1)',
+                color: 'var(--error)',
+                border: 'none',
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(item.id);
+              }}
+              title="删除"
+            >
+              ✕
+            </button>
           </div>
         ))}
       </div>

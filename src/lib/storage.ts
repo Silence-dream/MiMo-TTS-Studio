@@ -81,6 +81,16 @@ export function clearHistory(): void {
 }
 
 /**
+ * 删除单条历史记录
+ */
+export function deleteHistory(id: string): SynthesisHistory[] {
+  const history = getHistory();
+  const filtered = history.filter((item) => item.id !== id);
+  saveHistory(filtered);
+  return filtered;
+}
+
+/**
  * 保存历史到 localStorage
  */
 function saveHistory(history: SynthesisHistory[]): void {

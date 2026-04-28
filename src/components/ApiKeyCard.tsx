@@ -92,7 +92,7 @@ export default function ApiKeyCard({ onApiKeyChange, onApiEndpointChange }: ApiK
           <div className="text-xs" style={{ color: 'var(--muted)' }}>
             前往{' '}
             <a
-              href="https://platform.xiaomimimo.com"
+              href="https://platform.xiaomimimo.com/console/api-keys"
               target="_blank"
               rel="noopener noreferrer"
               style={{ color: 'var(--accent)' }}

@@ -16,7 +16,7 @@ import {
   getFileMimeType,
 } from '@/lib/api';
 import { createAudioUrl } from '@/lib/audio';
-import { getHistory, addHistory } from '@/lib/storage';
+import { getHistory, addHistory, deleteHistory } from '@/lib/storage';
 import ApiKeyCard from '@/components/ApiKeyCard';
 import ModelSelector from '@/components/ModelSelector';
 import VoiceSelector from '@/components/VoiceSelector';
@@ -26,8 +26,11 @@ import StatusBar from '@/components/StatusBar';
 import AudioPlayer from '@/components/AudioPlayer';
 import HistoryList from '@/components/HistoryList';
 import ThemeToggle from '@/components/ThemeToggle';
+import { useToast } from '@/components/Toast';
 
 export default function Home() {
+  const toast = useToast();
+
   // 状态
   const [apiKey, setApiKey] = useState('');
   const [apiEndpoint, setApiEndpoint] = useState('');
@@ -81,22 +84,22 @@ export default function Home() {
   // 处理合成
   const handleSynthesize = useCallback(async () => {
     if (!apiKey) {
-      alert('请先输入 API Key');
+      toast.error('请先输入 API Key');
       return;
     }
 
     if (!assistantContent.trim()) {
-      alert('请输入要合成的文本');
+      toast.warning('请输入要合成的文本');
       return;
     }
 
     if (model === 'mimo-v2.5-tts-voicedesign' && !voiceDesignPrompt.trim()) {
-      alert('声音设计模式需要填写声音描述');
+      toast.warning('声音设计模式需要填写声音描述');
       return;
     }
 
     if (model === 'mimo-v2.5-tts-voiceclone' && !cloneFile) {
-      alert('声音克隆模式需要上传音频样本');
+      toast.warning('声音克隆模式需要上传音频样本');
       return;
     }
 
@@ -172,10 +175,13 @@ export default function Home() {
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
       setStatus('success');
       setStatusMessage(`合成完成，耗时 ${elapsed}s`);
+      toast.success(`合成完成，耗时 ${elapsed}s`);
     } catch (error) {
       console.error('合成失败:', error);
+      const errorMsg = error instanceof Error ? error.message : '未知错误';
       setStatus('error');
-      setStatusMessage(`合成失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      setStatusMessage(`合成失败: ${errorMsg}`);
+      toast.error(`合成失败: ${errorMsg}`);
     } finally {
       setIsGenerating(false);
     }
@@ -184,6 +190,7 @@ export default function Home() {
     apiEndpoint,
     model,
     voice,
+    toast,
     format,
     voiceDesignPrompt,
     cloneFile,
@@ -207,6 +214,16 @@ export default function Home() {
     setAudioUrl(item.audioUrl);
     setAudioSize(item.audioSize);
   }, []);
+
+  // 处理删除历史记录
+  const handleDeleteHistory = useCallback(
+    (id: string) => {
+      const newHistory = deleteHistory(id);
+      setHistory(newHistory);
+      toast.success('已删除历史记录');
+    },
+    [toast]
+  );
 
   // 键盘快捷键
   useEffect(() => {
@@ -316,7 +333,7 @@ export default function Home() {
         <AudioPlayer audioUrl={audioUrl} audioSize={audioSize} />
 
         {/* History */}
-        <HistoryList history={history} onPlay={handlePlayHistory} />
+        <HistoryList history={history} onPlay={handlePlayHistory} onDelete={handleDeleteHistory} />
       </div>
     </div>
   );
