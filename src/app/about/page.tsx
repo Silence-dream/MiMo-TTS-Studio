@@ -276,7 +276,6 @@ export default function AboutPage() {
             {[
               { icon: '⚡', title: '流式合成', desc: 'PCM16 流式实时传输，快速获取音频' },
               { icon: '🎯', title: '高质量输出', desc: '24kHz 采样率，WAV 格式完整输出' },
-              { icon: '🔧', title: '参数调节', desc: '语速 0.5x~2.0x，音调 -12~+12' },
               { icon: '📦', title: '批量合成', desc: '上传 TXT 文件，逐行合成，ZIP 打包下载' },
               { icon: '✨', title: '文本预处理', desc: '去空格、去换行、智能分段、自动标点' },
               { icon: '📊', title: '字数统计', desc: '实时统计中英文字数，预估合成时长' },

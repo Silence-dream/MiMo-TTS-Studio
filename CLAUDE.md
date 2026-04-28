@@ -43,7 +43,6 @@ src/
 │   ├── VoiceSelector.tsx    # 内置音色选择 / 声音设计描述 / 声音克隆上传
 │   ├── StylePresets.tsx     # 风格标签：12 情绪 + 8 方言角色 + 8 音频效果
 │   ├── TextInput.tsx        # 文本输入、字数统计、预估时长、示例文本、TXT 上传
-│   ├── AudioControls.tsx    # 语速 (0.5-2.0x) / 音调 (-12~+12) 滑块
 │   ├── AudioPlayer.tsx      # 音频播放 + Web Audio API 频谱波形可视化
 │   ├── BatchSynthesis.tsx   # 批量合成（TXT 上传/拖拽，最多 100 行，ZIP 下载）
 │   ├── TextPreprocessor.tsx # 文本预处理（去空格、去换行、智能分段、添加标点）

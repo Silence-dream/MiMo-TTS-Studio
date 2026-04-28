@@ -20,7 +20,6 @@ import { getHistory, addHistory, deleteHistory } from '@/lib/storage';
 import ApiKeyCard from '@/components/ApiKeyCard';
 import ModelSelector from '@/components/ModelSelector';
 import VoiceSelector from '@/components/VoiceSelector';
-import AudioControls from '@/components/AudioControls';
 import BatchSynthesis from '@/components/BatchSynthesis';
 import TextPreprocessor from '@/components/TextPreprocessor';
 import SettingsManager from '@/components/SettingsManager';
@@ -43,8 +42,6 @@ export default function Home() {
   const [model, setModel] = useState<TTSModel>('mimo-v2.5-tts');
   const [voice, setVoice] = useState<BuiltInVoice>('mimo_default');
   const [format, setFormat] = useState<AudioFormat>('wav');
-  const [speed, setSpeed] = useState(1.0); // 语速 0.5-2.0
-  const [pitch, setPitch] = useState(0); // 音调 -12 到 12
   const [voiceDesignPrompt, setVoiceDesignPrompt] = useState('');
   const [cloneFile, setCloneFile] = useState<File | null>(null);
   const [cloneStylePrompt, setCloneStylePrompt] = useState('');
@@ -144,8 +141,6 @@ export default function Home() {
         model,
         messages,
         format,
-        speed,
-        pitch,
       };
 
       // 设置音色
@@ -261,8 +256,6 @@ export default function Home() {
             model,
             messages,
             format,
-            speed,
-            pitch,
             voice: model === 'mimo-v2.5-tts' ? voice : undefined,
           };
 
@@ -301,7 +294,7 @@ export default function Home() {
         setIsGenerating(false);
       }
     },
-    [apiKey, apiEndpoint, model, voice, format, speed, pitch, toast]
+    [apiKey, apiEndpoint, model, voice, format, toast]
   );
 
   // 键盘快捷键
@@ -391,14 +384,6 @@ export default function Home() {
             onCloneFileChange={setCloneFile}
             onCloneStylePromptChange={setCloneStylePrompt}
           />
-
-          {/* 语速/音调控制 */}
-          <AudioControls
-            speed={speed}
-            pitch={pitch}
-            onSpeedChange={setSpeed}
-            onPitchChange={setPitch}
-          />
         </div>
 
         {/* Batch Synthesis */}
@@ -406,8 +391,6 @@ export default function Home() {
           model={model}
           voice={voice}
           format={format}
-          speed={speed}
-          pitch={pitch}
           isGenerating={isGenerating}
           onSynthesize={handleBatchSynthesize}
         />

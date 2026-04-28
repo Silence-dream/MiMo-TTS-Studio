@@ -7,8 +7,6 @@ interface BatchSynthesisProps {
   model: TTSModel;
   voice: BuiltInVoice;
   format: AudioFormat;
-  speed: number;
-  pitch: number;
   isGenerating: boolean;
   onSynthesize: (texts: string[]) => void;
 }
@@ -17,8 +15,6 @@ export default function BatchSynthesis({
   model,
   voice,
   format,
-  speed,
-  pitch,
   isGenerating,
   onSynthesize,
 }: BatchSynthesisProps) {
@@ -284,13 +280,6 @@ export default function BatchSynthesis({
             <span>音色: {voice}</span>
             <span>·</span>
             <span>格式: {format}</span>
-            <span>·</span>
-            <span>语速: {speed}x</span>
-            <span>·</span>
-            <span>
-              音调: {pitch > 0 ? '+' : ''}
-              {pitch}
-            </span>
           </div>
 
           {/* 合成按钮 */}

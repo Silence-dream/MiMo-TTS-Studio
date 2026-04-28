@@ -7,8 +7,6 @@ interface Settings {
   apiKey: string;
   apiEndpoint: string;
   theme: string;
-  speed: number;
-  pitch: number;
   format: string;
   voice: string;
   exportedAt: string;
@@ -24,8 +22,6 @@ export default function SettingsManager() {
       apiKey: getApiKey(),
       apiEndpoint: getApiEndpoint(),
       theme: localStorage.getItem('theme') || 'system',
-      speed: parseFloat(localStorage.getItem('speed') || '1'),
-      pitch: parseInt(localStorage.getItem('pitch') || '0'),
       format: localStorage.getItem('format') || 'wav',
       voice: localStorage.getItem('voice') || 'mimo_default',
       exportedAt: new Date().toISOString(),
@@ -69,12 +65,6 @@ export default function SettingsManager() {
         if (settings.theme) {
           localStorage.setItem('theme', settings.theme);
         }
-        if (settings.speed) {
-          localStorage.setItem('speed', settings.speed.toString());
-        }
-        if (settings.pitch !== undefined) {
-          localStorage.setItem('pitch', settings.pitch.toString());
-        }
         if (settings.format) {
           localStorage.setItem('format', settings.format);
         }
@@ -96,8 +86,6 @@ export default function SettingsManager() {
   const handleReset = () => {
     if (confirm('确定要重置所有设置吗？这将清除所有保存的配置。')) {
       localStorage.removeItem('theme');
-      localStorage.removeItem('speed');
-      localStorage.removeItem('pitch');
       localStorage.removeItem('format');
       localStorage.removeItem('voice');
       // 保留 API Key 和 Endpoint

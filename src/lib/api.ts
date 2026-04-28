@@ -13,8 +13,6 @@ export interface SynthesizeParams {
   messages: TTSMessage[];
   format: AudioFormat;
   voice?: string;
-  speed?: number; // 语速 0.5-2.0
-  pitch?: number; // 音调 -12 到 12
   signal?: AbortSignal;
 }
 
@@ -22,7 +20,7 @@ export interface SynthesizeParams {
  * 非流式合成
  */
 export async function synthesizeNonStreaming(params: SynthesizeParams): Promise<Uint8Array> {
-  const { apiKey, apiEndpoint, model, messages, format, voice, speed, pitch, signal } = params;
+  const { apiKey, apiEndpoint, model, messages, format, voice, signal } = params;
 
   const body: Record<string, unknown> = {
     apiKey,
@@ -32,8 +30,6 @@ export async function synthesizeNonStreaming(params: SynthesizeParams): Promise<
     audio: {
       format,
       ...(voice && { voice }),
-      ...(speed !== undefined && { speed }),
-      ...(pitch !== undefined && { pitch }),
     },
   };
 
@@ -72,7 +68,7 @@ export async function synthesizeNonStreaming(params: SynthesizeParams): Promise<
  * 流式合成
  */
 export async function synthesizeStreaming(params: SynthesizeParams): Promise<Uint8Array> {
-  const { apiKey, apiEndpoint, model, messages, format, voice, speed, pitch, signal } = params;
+  const { apiKey, apiEndpoint, model, messages, format, voice, signal } = params;
 
   const body: Record<string, unknown> = {
     apiKey,
@@ -82,8 +78,6 @@ export async function synthesizeStreaming(params: SynthesizeParams): Promise<Uin
     audio: {
       format,
       ...(voice && { voice }),
-      ...(speed !== undefined && { speed }),
-      ...(pitch !== undefined && { pitch }),
     },
     stream: true,
   };
