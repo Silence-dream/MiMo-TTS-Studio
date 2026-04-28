@@ -35,11 +35,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const addToast = useCallback((message: string, type: ToastType) => {
     const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     setToasts((prev) => [...prev, { id, message, type }]);
-
-    // 3秒后自动移除
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3000);
+    // 移除逻辑由 ToastItem 组件内部控制（含退出动画）
   }, []);
 
   const toast = {

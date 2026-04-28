@@ -21,7 +21,8 @@
       "Bash(npx prettier *)",
       "Bash(pnpm build *)",
       "WebFetch(domain:github.com)",
-      "Bash(npx tailwindcss *)"
+      "Bash(npx tailwindcss *)",
+      "mcp__sequential-thinking__sequentialthinking"
     ]
   }
 }

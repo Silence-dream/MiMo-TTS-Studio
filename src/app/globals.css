@@ -620,69 +620,6 @@ select {
   }
 }
 
-/* ===== 历史记录项 ===== */
-
-.history-item {
-  position: relative;
-}
-
-.history-item:hover {
-  background: var(--card-hover);
-}
-
-.history-delete-btn {
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.history-item:hover .history-delete-btn {
-  opacity: 1;
-}
-
-.history-delete-btn:hover {
-  background: rgba(248, 113, 113, 0.2) !important;
-  transform: scale(1.1);
-}
-
-/* ===== 音频控制滑块 ===== */
-
-.audio-slider {
-  -webkit-appearance: none;
-  appearance: none;
-  height: 6px;
-  border-radius: 3px;
-  background: var(--border);
-  outline: none;
-  cursor: pointer;
-}
-
-.audio-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #7c3aed, #a78bfa);
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
-  transition: all 0.2s ease;
-}
-
-.audio-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.5);
-}
-
-.audio-slider::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #7c3aed, #a78bfa);
-  cursor: pointer;
-  border: none;
-  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
-}
-
 /* ===== 快捷键面板 ===== */
 
 .shortcuts-overlay {
@@ -1017,6 +954,10 @@ select {
 
 .history-item {
   position: relative;
+}
+
+.history-item:hover {
+  background: var(--card-hover);
 }
 
 .history-action-btn {

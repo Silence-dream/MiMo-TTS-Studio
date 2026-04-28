@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -11,6 +11,10 @@ export default function ThemeToggle() {
     if (typeof window === 'undefined') return 'dark';
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   });
+
+  // 使用 ref 追踪当前 theme，避免闭包捕获过期值
+  const themeRef = useRef<Theme>(theme);
+  themeRef.current = theme;
 
   // 获取系统主题偏好
   const getSystemTheme = useCallback((): 'light' | 'dark' => {
@@ -23,8 +27,8 @@ export default function ThemeToggle() {
     setActualTheme(themeToApply);
   }, []);
 
+  // 初始化主题
   useEffect(() => {
-    // 从 localStorage 读取主题设置
     const savedTheme = localStorage.getItem('theme') as Theme | null;
 
     if (
@@ -38,22 +42,23 @@ export default function ThemeToggle() {
         applyTheme(savedTheme);
       }
     } else {
-      // 默认使用系统主题
       setTheme('system');
       applyTheme(getSystemTheme());
     }
+  }, [applyTheme, getSystemTheme]);
 
-    // 监听系统主题变化
+  // 监听系统主题变化（使用 ref 避免闭包问题）
+  useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = () => {
-      if (theme === 'system') {
+      if (themeRef.current === 'system') {
         applyTheme(getSystemTheme());
       }
     };
 
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [applyTheme, getSystemTheme, theme]);
+  }, [applyTheme, getSystemTheme]);
 
   // 当 theme 状态变化时，应用相应的主题
   useEffect(() => {

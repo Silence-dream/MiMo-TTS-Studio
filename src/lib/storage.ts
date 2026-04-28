@@ -65,9 +65,14 @@ export function addHistory(item: Omit<SynthesisHistory, 'id' | 'createdAt'>): Sy
 
   history.unshift(newItem);
 
-  // 限制历史记录数量
+  // 限制历史记录数量，释放被移除项的 Blob URL
   if (history.length > MAX_HISTORY_ITEMS) {
-    history.splice(MAX_HISTORY_ITEMS);
+    const removed = history.splice(MAX_HISTORY_ITEMS);
+    removed.forEach((item) => {
+      if (item.audioUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(item.audioUrl);
+      }
+    });
   }
 
   saveHistory(history);
@@ -77,9 +82,17 @@ export function addHistory(item: Omit<SynthesisHistory, 'id' | 'createdAt'>): Sy
 /**
  * 清空合成历史
  */
-export function clearHistory(): void {
-  if (typeof window === 'undefined') return;
+export function clearHistory(): SynthesisHistory[] {
+  if (typeof window === 'undefined') return [];
+  const history = getHistory();
+  // 释放所有 Blob URL
+  history.forEach((item) => {
+    if (item.audioUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(item.audioUrl);
+    }
+  });
   localStorage.removeItem(HISTORY_STORAGE_KEY);
+  return [];
 }
 
 /**
@@ -87,6 +100,11 @@ export function clearHistory(): void {
  */
 export function deleteHistory(id: string): SynthesisHistory[] {
   const history = getHistory();
+  const target = history.find((item) => item.id === id);
+  // 释放被删除项的 Blob URL
+  if (target?.audioUrl.startsWith('blob:')) {
+    URL.revokeObjectURL(target.audioUrl);
+  }
   const filtered = history.filter((item) => item.id !== id);
   saveHistory(filtered);
   return filtered;

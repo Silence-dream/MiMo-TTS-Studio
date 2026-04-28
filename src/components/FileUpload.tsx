@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
+import { formatFileSize } from '@/lib/audio';
 
 interface FileUploadProps {
   accept: string;
@@ -128,12 +129,6 @@ export default function FileUpload({
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-  };
-
-  const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   return (

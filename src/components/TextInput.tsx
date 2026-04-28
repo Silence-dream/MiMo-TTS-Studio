@@ -53,7 +53,10 @@ export default function TextInput({
   const handleExampleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const index = e.target.value;
     if (index === '') return;
-    onAssistantContentChange(EXAMPLE_LINES[Number(index)].text);
+    const example = EXAMPLE_LINES[Number(index)];
+    onAssistantContentChange(example.text);
+    // 示例已包含风格标签，清空风格指令避免冲突
+    onUserMessageChange('');
     e.target.value = '';
   };
 
