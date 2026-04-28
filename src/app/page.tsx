@@ -225,7 +225,23 @@ export default function Home() {
   return (
     <div className="min-h-screen" style={{ background: 'var(--background)' }}>
       <ThemeToggle />
-      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 24px' }}>
+      <div
+        style={{
+          maxWidth: '900px',
+          margin: '0 auto',
+          padding: '40px 24px',
+          background: 'var(--card)',
+          backdropFilter: 'blur(16px) saturate(170%)',
+          WebkitBackdropFilter: 'blur(16px) saturate(170%)',
+          borderRadius: '24px',
+          border: '1px solid var(--card-border)',
+          boxShadow: 'var(--shadow-card)',
+          marginTop: '20px',
+          marginBottom: '20px',
+          position: 'relative',
+          zIndex: 1,
+        }}
+      >
         {/* Header */}
         <header className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-3 gradient-text">MiMo TTS Studio</h1>

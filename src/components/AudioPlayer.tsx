@@ -21,7 +21,18 @@ export default function AudioPlayer({ audioUrl, audioSize }: AudioPlayerProps) {
   if (!audioUrl) return null;
 
   return (
-    <div className="rounded-xl p-5 mt-4" style={{ background: 'var(--card-hover)' }}>
+    <div
+      className="rounded-xl p-5"
+      style={{
+        background: 'var(--card)',
+        backdropFilter: 'blur(16px) saturate(170%)',
+        WebkitBackdropFilter: 'blur(16px) saturate(170%)',
+        border: '1px solid var(--card-border)',
+        boxShadow: 'var(--shadow-card)',
+        marginTop: '10px',
+        marginBottom: '10px',
+      }}
+    >
       <audio ref={audioRef} controls className="w-full h-12 rounded-lg outline-none" />
       <div
         className="flex justify-between items-center mt-3 text-sm"

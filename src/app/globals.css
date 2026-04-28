@@ -1,5 +1,10 @@
 @import 'tailwindcss';
 
+/* Tailwind CSS 4 间距基准变量（1 = 4px） */
+@theme {
+  --spacing: 0.25rem;
+}
+
 /* ===== 设计系统：MiMo TTS Studio ===== */
 
 /* 暗色主题（默认） */
@@ -18,8 +23,8 @@
   --surface-hover: rgba(255, 255, 255, 0.06);
 
   /* 卡片：毛玻璃 */
-  --card: rgba(255, 255, 255, 0.04);
-  --card-hover: rgba(255, 255, 255, 0.07);
+  --card: rgba(255, 255, 255, 0.05);
+  --card-hover: rgba(255, 255, 255, 0.08);
   --card-border: rgba(255, 255, 255, 0.08);
   --card-border-hover: rgba(139, 92, 246, 0.3);
 
@@ -64,7 +69,7 @@
   --surface: rgba(0, 0, 0, 0.02);
   --surface-hover: rgba(0, 0, 0, 0.04);
 
-  --card: rgba(255, 255, 255, 0.8);
+  --card: rgba(255, 255, 255, 0.85);
   --card-hover: rgba(255, 255, 255, 0.95);
   --card-border: rgba(0, 0, 0, 0.08);
   --card-border-hover: rgba(124, 58, 237, 0.3);
@@ -94,10 +99,12 @@
 
 /* ===== 全局重置 ===== */
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 }
 
 html {
@@ -141,10 +148,13 @@ body::after {
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(ellipse at 50% 0%, var(--accent-glow) 0%, transparent 50%);
+  background:
+    radial-gradient(ellipse at 20% 20%, var(--accent-glow) 0%, transparent 40%),
+    radial-gradient(ellipse at 80% 80%, var(--accent-glow) 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 0%, var(--accent-glow) 0%, transparent 50%);
   pointer-events: none;
   z-index: 0;
-  opacity: 0.5;
+  opacity: 0.6;
 }
 
 /* ===== 滚动条 ===== */
@@ -300,8 +310,8 @@ select {
   border-radius: 20px;
   padding: 28px;
   margin-bottom: 24px;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px) saturate(170%);
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
   box-shadow: var(--shadow-card);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
