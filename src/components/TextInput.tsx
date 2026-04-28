@@ -3,13 +3,24 @@
 import { useMemo, useRef } from 'react';
 import { TTSModel } from '@/types/tts';
 
-// 示例文本
-const EXAMPLE_TEXT = `(怅然)这么多年过去了，再走过那条街，心里一下子空了一块。
-(慵懒)再让我睡五分钟……就五分钟，真的，最后一次。
-(磁性)夜已经深了，城市还在呼吸。我是今晚陪你的人，欢迎收听《午夜电台》。
-(东北话)哎呀妈呀，这天儿也忒冷了吧！你说这风，嗖嗖的，跟刀子似的，割脸啊！
-(粤语)呢个真係好正啊！食过一次就唔会忘记！
-(唱歌)原谅我这一生不羁放纵爱自由，也会怕有一天会跌倒，Oh no。背弃了理想，谁人都可以，哪会怕有一天只你共我。`;
+// 示例文本列表
+const EXAMPLE_LINES = [
+  { label: '怅然', text: '(怅然)这么多年过去了，再走过那条街，心里一下子空了一块。' },
+  { label: '慵懒', text: '(慵懒)再让我睡五分钟……就五分钟，真的，最后一次。' },
+  {
+    label: '磁性',
+    text: '(磁性)夜已经深了，城市还在呼吸。我是今晚陪你的人，欢迎收听《午夜电台》。',
+  },
+  {
+    label: '东北话',
+    text: '(东北话)哎呀妈呀，这天儿也忒冷了吧！你说这风，嗖嗖的，跟刀子似的，割脸啊！',
+  },
+  { label: '粤语', text: '(粤语)呢个真係好正啊！食过一次就唔会忘记！' },
+  {
+    label: '唱歌',
+    text: '(唱歌)原谅我这一生不羁放纵爱自由，也会怕有一天会跌倒，Oh no。背弃了理想，谁人都可以，哪会怕有一天只你共我。',
+  },
+];
 
 interface TextInputProps {
   model: TTSModel;
@@ -37,6 +48,14 @@ export default function TextInput({
 }: TextInputProps) {
   const isVoiceDesign = model === 'mimo-v2.5-tts-voicedesign';
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 处理示例选择
+  const handleExampleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const index = e.target.value;
+    if (index === '') return;
+    onAssistantContentChange(EXAMPLE_LINES[Number(index)].text);
+    e.target.value = '';
+  };
 
   // 处理 txt 文件上传
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -142,13 +161,21 @@ export default function TextInput({
           >
             📄 上传 TXT
           </button>
-          <button
-            type="button"
-            className="btn btn-secondary text-xs !py-1.5 !px-3"
-            onClick={() => onAssistantContentChange(EXAMPLE_TEXT)}
+          <select
+            className="btn btn-secondary text-xs !py-1.5 !px-3 cursor-pointer"
+            value=""
+            onChange={handleExampleChange}
+            style={{ appearance: 'auto' }}
           >
-            💡 填入示例
-          </button>
+            <option value="" disabled>
+              💡 填入示例
+            </option>
+            {EXAMPLE_LINES.map((item, i) => (
+              <option key={item.label} value={i}>
+                {item.label} — {item.text.replace(/^\([^)]+\)/, '')}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
