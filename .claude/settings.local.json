@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:platform.xiaomimimo.com)",
+      "WebSearch",
+      "Bash(curl -sL --max-time 15 \"https://platform.xiaomimimo.com/docs/zh-CN/usage-guide/speech-synthesis-v2.5\")",
+      "Bash(curl -sL --max-time 15 \"https://platform.xiaomimimo.com/docs/zh-CN/usage-guide/speech-synthesis-v2.5\" -H \"User-Agent: Mozilla/5.0\")",
+      "Bash(curl -sL --max-time 15 \"https://platform.xiaomimimo.com/llms.txt\")",
+      "Bash(curl *)",
+      "Bash(pnpm create *)",
+      "Bash(pnpm init *)",
+      "Bash(pnpm add *)",
+      "Bash(pnpm lint *)",
+      "Bash(npx tsc *)",
+      "Bash(pnpm dev *)",
+      "Read(//c/Users/ns/.claude/skills/ui-ux-pro-max/**)",
+      "Bash(python3 scripts/search.py \"TTS speech synthesis AI tool dark mode futuristic purple\" --design-system -p \"MiMo TTS Studio\")",
+      "Bash(python scripts/search.py \"TTS speech synthesis AI tool dark mode futuristic purple\" --design-system -p \"MiMo TTS Studio\")",
+      "Bash(npx husky *)",
+      "Bash(git init *)",
+      "Bash(npx prettier *)",
+      "Bash(pnpm build *)",
+      "WebFetch(domain:github.com)"
+    ]
+  }
+}

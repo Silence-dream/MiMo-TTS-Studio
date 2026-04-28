@@ -1,0 +1,46 @@
+{
+  "name": "mimo-tts-studio",
+  "version": "1.0.0",
+  "description": "MiMo TTS Studio - 基于小米 MiMo-V2.5-TTS 的语音合成工具",
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,json,css,scss,md}": [
+      "prettier --write"
+    ]
+  },
+  "keywords": [
+    "tts",
+    "mimo",
+    "xiaomi",
+    "speech-synthesis"
+  ],
+  "author": "",
+  "license": "MIT",
+  "packageManager": "pnpm@10.33.2",
+  "dependencies": {
+    "next": "^16.2.4",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.4",
+    "@types/node": "25.6.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "code-inspector-plugin": "^1.5.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "postcss": "^8.5.12",
+    "prettier": "^3.8.3",
+    "tailwindcss": "^4.2.4",
+    "typescript": "^6.0.3"
+  }
+}
