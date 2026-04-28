@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
+import Link from 'next/link';
 import {
   TTSModel,
   BuiltInVoice,
@@ -245,9 +246,20 @@ export default function Home() {
         {/* Header */}
         <header className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-3 gradient-text">MiMo TTS Studio</h1>
-          <p className="text-sm" style={{ color: 'var(--foreground-secondary)' }}>
+          <p className="text-sm mb-4" style={{ color: 'var(--foreground-secondary)' }}>
             基于小米 MiMo-V2.5-TTS 系列模型的语音合成工具
           </p>
+          <Link
+            href="/about"
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium transition-all no-underline"
+            style={{
+              background: 'var(--accent-glow)',
+              color: 'var(--accent)',
+              border: '1px solid var(--accent)',
+            }}
+          >
+            了解更多 →
+          </Link>
         </header>
 
         {/* API Key */}
