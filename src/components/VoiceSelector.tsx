@@ -1,8 +1,14 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { TTSModel, BuiltInVoice, AudioFormat } from '@/types/tts';
-import { fileToBase64, getFileMimeType } from '@/lib/api';
+import {
+  getFavoriteVoices,
+  toggleFavoriteVoice,
+  recordVoiceUsage,
+  getMostUsedVoices,
+} from '@/lib/storage';
+import FileUpload from './FileUpload';
 
 interface VoiceSelectorProps {
   model: TTSModel;
@@ -43,24 +49,124 @@ export default function VoiceSelector({
   onCloneFileChange,
   onCloneStylePromptChange,
 }: VoiceSelectorProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [mostUsed, setMostUsed] = useState<string[]>([]);
+
+  useEffect(() => {
+    setFavorites(getFavoriteVoices());
+    setMostUsed(getMostUsedVoices());
+  }, []);
+
+  const handleVoiceSelect = (voiceId: BuiltInVoice) => {
+    onVoiceChange(voiceId);
+    recordVoiceUsage(voiceId);
+  };
+
+  const handleToggleFavorite = (voiceId: string) => {
+    const { favorites: newFavorites } = toggleFavoriteVoice(voiceId);
+    setFavorites(newFavorites);
+    setMostUsed(getMostUsedVoices());
+  };
 
   // 内置音色模式
   if (model === 'mimo-v2.5-tts') {
     return (
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="flex flex-col gap-4 mb-4">
+        {/* 常用音色 */}
+        {mostUsed.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <label className="text-sm" style={{ color: 'var(--muted)' }}>
+              常用音色
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {mostUsed.map((voiceId) => {
+                const v = builtInVoices.find((v) => v.id === voiceId);
+                if (!v) return null;
+                return (
+                  <span
+                    key={voiceId}
+                    className={`tag ${voice === voiceId ? 'active' : ''}`}
+                    onClick={() => handleVoiceSelect(v.id)}
+                  >
+                    {v.name}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* 收藏的音色 */}
+        {favorites.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <label className="text-sm" style={{ color: 'var(--muted)' }}>
+              收藏音色
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {favorites.map((voiceId) => {
+                const v = builtInVoices.find((v) => v.id === voiceId);
+                if (!v) return null;
+                return (
+                  <span
+                    key={voiceId}
+                    className={`tag ${voice === voiceId ? 'active' : ''}`}
+                    onClick={() => handleVoiceSelect(v.id)}
+                  >
+                    ❤️ {v.name}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* 所有音色 */}
         <div className="flex flex-col gap-2">
           <label className="text-sm" style={{ color: 'var(--muted)' }}>
             音色选择
           </label>
-          <select value={voice} onChange={(e) => onVoiceChange(e.target.value as BuiltInVoice)}>
+          <div className="grid grid-cols-2 gap-2">
             {builtInVoices.map((v) => (
-              <option key={v.id} value={v.id}>
-                {v.name} ({v.language} {v.gender})
-              </option>
+              <div
+                key={v.id}
+                className="flex items-center gap-2 p-3 rounded-lg cursor-pointer transition-all"
+                style={{
+                  background: voice === v.id ? 'var(--accent-glow)' : 'var(--surface)',
+                  border: `1px solid ${voice === v.id ? 'var(--accent)' : 'var(--border)'}`,
+                }}
+                onClick={() => handleVoiceSelect(v.id)}
+              >
+                <div className="flex-1">
+                  <div className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>
+                    {v.name}
+                  </div>
+                  <div className="text-xs" style={{ color: 'var(--muted)' }}>
+                    {v.language} · {v.gender}
+                  </div>
+                </div>
+                <button
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-xs cursor-pointer transition-all"
+                  style={{
+                    background: favorites.includes(v.id)
+                      ? 'rgba(248, 113, 113, 0.2)'
+                      : 'transparent',
+                    color: favorites.includes(v.id) ? 'var(--error)' : 'var(--muted)',
+                    border: 'none',
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToggleFavorite(v.id);
+                  }}
+                  title={favorites.includes(v.id) ? '取消收藏' : '收藏'}
+                >
+                  {favorites.includes(v.id) ? '❤️' : '🤍'}
+                </button>
+              </div>
             ))}
-          </select>
+          </div>
         </div>
+
+        {/* 输出格式 */}
         <div className="flex flex-col gap-2">
           <label className="text-sm" style={{ color: 'var(--muted)' }}>
             输出格式
@@ -108,22 +214,13 @@ export default function VoiceSelector({
   // 声音克隆模式
   return (
     <div className="mb-4">
-      <div className="flex flex-col gap-2 mb-4">
-        <label className="text-sm" style={{ color: 'var(--muted)' }}>
-          上传音频样本 (MP3/WAV, {'<'}10MB)
-        </label>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".mp3,.wav,audio/mpeg,audio/wav"
-          onChange={(e) => {
-            const file = e.target.files?.[0] || null;
-            onCloneFileChange(file);
-          }}
-          style={{ padding: '10px' }}
-        />
-      </div>
-      <div className="flex flex-col gap-2 mb-4">
+      <FileUpload
+        accept=".mp3,.wav,audio/mpeg,audio/wav"
+        maxSize={10 * 1024 * 1024} // 10MB
+        onFileChange={onCloneFileChange}
+        currentFile={cloneFile}
+      />
+      <div className="flex flex-col gap-2 mt-4">
         <label className="text-sm" style={{ color: 'var(--muted)' }}>
           风格指令 (可选)
         </label>
@@ -134,7 +231,7 @@ export default function VoiceSelector({
           placeholder="用自然语言描述说话风格，如：用欢快的语气"
         />
       </div>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 mt-4">
         <label className="text-sm" style={{ color: 'var(--muted)' }}>
           输出格式
         </label>

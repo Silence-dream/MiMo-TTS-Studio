@@ -20,12 +20,18 @@ import { getHistory, addHistory, deleteHistory } from '@/lib/storage';
 import ApiKeyCard from '@/components/ApiKeyCard';
 import ModelSelector from '@/components/ModelSelector';
 import VoiceSelector from '@/components/VoiceSelector';
+import AudioControls from '@/components/AudioControls';
+import BatchSynthesis from '@/components/BatchSynthesis';
+import TextPreprocessor from '@/components/TextPreprocessor';
+import SettingsManager from '@/components/SettingsManager';
 import StylePresets from '@/components/StylePresets';
 import TextInput from '@/components/TextInput';
 import StatusBar from '@/components/StatusBar';
 import AudioPlayer from '@/components/AudioPlayer';
 import HistoryList from '@/components/HistoryList';
 import ThemeToggle from '@/components/ThemeToggle';
+import KeyboardShortcuts from '@/components/KeyboardShortcuts';
+import OnboardingGuide from '@/components/OnboardingGuide';
 import { useToast } from '@/components/Toast';
 
 export default function Home() {
@@ -37,6 +43,8 @@ export default function Home() {
   const [model, setModel] = useState<TTSModel>('mimo-v2.5-tts');
   const [voice, setVoice] = useState<BuiltInVoice>('mimo_default');
   const [format, setFormat] = useState<AudioFormat>('wav');
+  const [speed, setSpeed] = useState(1.0); // 语速 0.5-2.0
+  const [pitch, setPitch] = useState(0); // 音调 -12 到 12
   const [voiceDesignPrompt, setVoiceDesignPrompt] = useState('');
   const [cloneFile, setCloneFile] = useState<File | null>(null);
   const [cloneStylePrompt, setCloneStylePrompt] = useState('');
@@ -136,6 +144,8 @@ export default function Home() {
         model,
         messages,
         format,
+        speed,
+        pitch,
       };
 
       // 设置音色
@@ -225,6 +235,75 @@ export default function Home() {
     [toast]
   );
 
+  // 处理批量合成
+  const handleBatchSynthesize = useCallback(
+    async (texts: string[]) => {
+      if (!apiKey) {
+        toast.error('请先输入 API Key');
+        return;
+      }
+
+      setIsGenerating(true);
+      setStatus('loading');
+      setStatusMessage(`批量合成中 (0/${texts.length})...`);
+      const startTime = Date.now();
+
+      try {
+        const results: { text: string; audioUrl: string; audioSize: number }[] = [];
+
+        for (let i = 0; i < texts.length; i++) {
+          setStatusMessage(`批量合成中 (${i + 1}/${texts.length})...`);
+
+          const messages = [{ role: 'assistant' as const, content: texts[i] }];
+          const params = {
+            apiKey,
+            apiEndpoint: apiEndpoint || undefined,
+            model,
+            messages,
+            format,
+            speed,
+            pitch,
+            voice: model === 'mimo-v2.5-tts' ? voice : undefined,
+          };
+
+          let audioBytes: Uint8Array;
+          if (format === 'pcm16') {
+            audioBytes = await synthesizeStreaming(params);
+          } else {
+            audioBytes = await synthesizeNonStreaming(params);
+          }
+
+          const url = createAudioUrl(audioBytes);
+          results.push({ text: texts[i], audioUrl: url, audioSize: audioBytes.length });
+
+          // 添加到历史记录
+          const newHistory = addHistory({
+            text: texts[i].substring(0, 100),
+            model,
+            voice: model === 'mimo-v2.5-tts' ? voice : undefined,
+            audioUrl: url,
+            audioSize: audioBytes.length,
+          });
+          setHistory(newHistory);
+        }
+
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        setStatus('success');
+        setStatusMessage(`批量合成完成，共 ${texts.length} 条，耗时 ${elapsed}s`);
+        toast.success(`批量合成完成，共 ${texts.length} 条`);
+      } catch (error) {
+        console.error('批量合成失败:', error);
+        const errorMsg = error instanceof Error ? error.message : '未知错误';
+        setStatus('error');
+        setStatusMessage(`批量合成失败: ${errorMsg}`);
+        toast.error(`批量合成失败: ${errorMsg}`);
+      } finally {
+        setIsGenerating(false);
+      }
+    },
+    [apiKey, apiEndpoint, model, voice, format, speed, pitch, toast]
+  );
+
   // 键盘快捷键
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -243,7 +322,10 @@ export default function Home() {
   return (
     <div className="min-h-screen" style={{ background: 'var(--background)' }}>
       <ThemeToggle />
+      <KeyboardShortcuts />
+      <OnboardingGuide />
       <div
+        className="main-container"
         style={{
           maxWidth: '900px',
           margin: '0 auto',
@@ -309,7 +391,32 @@ export default function Home() {
             onCloneFileChange={setCloneFile}
             onCloneStylePromptChange={setCloneStylePrompt}
           />
+
+          {/* 语速/音调控制 */}
+          <AudioControls
+            speed={speed}
+            pitch={pitch}
+            onSpeedChange={setSpeed}
+            onPitchChange={setPitch}
+          />
         </div>
+
+        {/* Batch Synthesis */}
+        <BatchSynthesis
+          model={model}
+          voice={voice}
+          format={format}
+          speed={speed}
+          pitch={pitch}
+          isGenerating={isGenerating}
+          onSynthesize={handleBatchSynthesize}
+        />
+
+        {/* Text Preprocessor */}
+        <TextPreprocessor text={assistantContent} onTextChange={setAssistantContent} />
+
+        {/* Settings Manager */}
+        <SettingsManager />
 
         {/* Style Presets */}
         <StylePresets onInsertTag={handleInsertTag} />

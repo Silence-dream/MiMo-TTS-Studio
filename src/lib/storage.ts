@@ -3,6 +3,8 @@ import { SynthesisHistory } from '@/types/tts';
 const API_KEY_STORAGE_KEY = 'mimo_api_key';
 const API_ENDPOINT_STORAGE_KEY = 'mimo_api_endpoint';
 const HISTORY_STORAGE_KEY = 'mimo_tts_history';
+const FAVORITE_VOICES_KEY = 'mimo_favorite_voices';
+const VOICE_USAGE_KEY = 'mimo_voice_usage';
 const MAX_HISTORY_ITEMS = 20;
 
 /**
@@ -103,4 +105,103 @@ function saveHistory(history: SynthesisHistory[]): void {
  */
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+// ===== 音色收藏功能 =====
+
+interface VoiceUsage {
+  voiceId: string;
+  count: number;
+  lastUsed: number;
+}
+
+/**
+ * 获取收藏的音色列表
+ */
+export function getFavoriteVoices(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const data = localStorage.getItem(FAVORITE_VOICES_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * 添加音色到收藏
+ */
+export function addFavoriteVoice(voiceId: string): string[] {
+  const favorites = getFavoriteVoices();
+  if (!favorites.includes(voiceId)) {
+    favorites.push(voiceId);
+    localStorage.setItem(FAVORITE_VOICES_KEY, JSON.stringify(favorites));
+  }
+  return favorites;
+}
+
+/**
+ * 从收藏中移除音色
+ */
+export function removeFavoriteVoice(voiceId: string): string[] {
+  const favorites = getFavoriteVoices().filter((id) => id !== voiceId);
+  localStorage.setItem(FAVORITE_VOICES_KEY, JSON.stringify(favorites));
+  return favorites;
+}
+
+/**
+ * 切换音色收藏状态
+ */
+export function toggleFavoriteVoice(voiceId: string): { favorites: string[]; isFavorite: boolean } {
+  const favorites = getFavoriteVoices();
+  const isFavorite = favorites.includes(voiceId);
+
+  if (isFavorite) {
+    return { favorites: removeFavoriteVoice(voiceId), isFavorite: false };
+  } else {
+    return { favorites: addFavoriteVoice(voiceId), isFavorite: true };
+  }
+}
+
+/**
+ * 记录音色使用
+ */
+export function recordVoiceUsage(voiceId: string): void {
+  if (typeof window === 'undefined') return;
+
+  const usage = getVoiceUsage();
+  const existing = usage.find((u) => u.voiceId === voiceId);
+
+  if (existing) {
+    existing.count++;
+    existing.lastUsed = Date.now();
+  } else {
+    usage.push({ voiceId, count: 1, lastUsed: Date.now() });
+  }
+
+  localStorage.setItem(VOICE_USAGE_KEY, JSON.stringify(usage));
+}
+
+/**
+ * 获取音色使用统计
+ */
+export function getVoiceUsage(): VoiceUsage[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const data = localStorage.getItem(VOICE_USAGE_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * 获取最常用的音色
+ */
+export function getMostUsedVoices(limit: number = 5): string[] {
+  const usage = getVoiceUsage();
+  return usage
+    .sort((a, b) => b.count - a.count)
+    .slice(0, limit)
+    .map((u) => u.voiceId);
 }
