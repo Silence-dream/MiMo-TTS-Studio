@@ -13,6 +13,7 @@ export default function AudioPlayer({ audioUrl, audioSize }: AudioPlayerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
@@ -23,11 +24,13 @@ export default function AudioPlayer({ audioUrl, audioSize }: AudioPlayerProps) {
     }
   }, [audioUrl]);
 
-  // 初始化音频分析器
+  // 初始化音频分析器（复用已有 AudioContext）
   const initAudioAnalyser = useCallback(() => {
     if (!audioRef.current || analyserRef.current) return;
 
-    const audioContext = new AudioContext();
+    const audioContext = audioContextRef.current ?? new AudioContext();
+    audioContextRef.current = audioContext;
+
     const analyser = audioContext.createAnalyser();
     analyser.fftSize = 256;
 
@@ -109,11 +112,15 @@ export default function AudioPlayer({ audioUrl, audioSize }: AudioPlayerProps) {
     setIsPlaying(!isPlaying);
   }, [isPlaying, initAudioAnalyser, drawWaveform]);
 
-  // 清理动画
+  // 清理动画和 AudioContext
   useEffect(() => {
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
       }
     };
   }, []);
