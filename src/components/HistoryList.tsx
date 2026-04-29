@@ -41,11 +41,12 @@ export default function HistoryList({ history, onPlay, onDelete }: HistoryListPr
     return new Date(b).getTime() - new Date(a).getTime();
   });
 
-  // 过滤历史记录
+  // 过滤历史记录（复用 groupedHistory 做日期过滤）
   const filteredHistory = useMemo(() => {
-    let filtered = history;
+    // 先按日期筛选
+    let filtered = selectedDate ? groupedHistory[selectedDate] || [] : history;
 
-    // 搜索过滤
+    // 再按搜索关键词筛选
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -54,20 +55,8 @@ export default function HistoryList({ history, onPlay, onDelete }: HistoryListPr
       );
     }
 
-    // 日期过滤
-    if (selectedDate) {
-      filtered = filtered.filter((item) => {
-        const date = new Date(item.createdAt).toLocaleDateString('zh-CN', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-        });
-        return date === selectedDate;
-      });
-    }
-
     return filtered;
-  }, [history, searchQuery, selectedDate]);
+  }, [history, groupedHistory, searchQuery, selectedDate]);
 
   // 切换选择状态
   const toggleSelect = useCallback((id: string) => {
