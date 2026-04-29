@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import {
   TTSModel,
@@ -15,7 +15,7 @@ import {
   fileToBase64,
   getFileMimeType,
 } from '@/lib/api';
-import { createAudioUrl } from '@/lib/audio';
+import { createAudioUrl, revokeAudioUrl } from '@/lib/audio';
 import { getHistory, addHistory, deleteHistory } from '@/lib/storage';
 import ApiKeyCard from '@/components/ApiKeyCard';
 import ModelSelector from '@/components/ModelSelector';
@@ -53,10 +53,18 @@ export default function Home() {
   const [audioSize, setAudioSize] = useState(0);
   const [history, setHistory] = useState<SynthesisHistory[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const audioUrlRef = useRef<string | null>(null);
 
   // 加载历史记录
   useEffect(() => {
     setHistory(getHistory());
+  }, []);
+
+  // 组件卸载时释放 Blob URL
+  useEffect(() => {
+    return () => {
+      if (audioUrlRef.current) revokeAudioUrl(audioUrlRef.current);
+    };
   }, []);
 
   // 处理模型切换
@@ -162,8 +170,10 @@ export default function Home() {
         audioBytes = await synthesizeNonStreaming(params);
       }
 
-      // 创建音频 URL
+      // 创建音频 URL，释放旧的 Blob URL
       const url = createAudioUrl(audioBytes);
+      if (audioUrlRef.current) revokeAudioUrl(audioUrlRef.current);
+      audioUrlRef.current = url;
       setAudioUrl(url);
       setAudioSize(audioBytes.length);
 
@@ -208,6 +218,10 @@ export default function Home() {
   const handleClear = useCallback(() => {
     setUserMessage('');
     setAssistantContent('');
+    if (audioUrlRef.current) {
+      revokeAudioUrl(audioUrlRef.current);
+      audioUrlRef.current = null;
+    }
     setAudioUrl(null);
     setAudioSize(0);
     setStatus('idle');
