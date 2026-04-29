@@ -172,9 +172,19 @@ export function fileToBase64(file: File): Promise<string> {
 }
 
 /**
- * 获取文件 MIME 类型
+ * 获取文件 MIME 类型（优先使用浏览器检测的 type，兜底按扩展名判断）
  */
 export function getFileMimeType(file: File): string {
-  if (file.name.endsWith('.wav')) return 'audio/wav';
-  return 'audio/mpeg';
+  if (file.type) return file.type;
+  const ext = file.name.split('.').pop()?.toLowerCase();
+  const extMap: Record<string, string> = {
+    wav: 'audio/wav',
+    mp3: 'audio/mpeg',
+    ogg: 'audio/ogg',
+    flac: 'audio/flac',
+    m4a: 'audio/mp4',
+    aac: 'audio/aac',
+    webm: 'audio/webm',
+  };
+  return extMap[ext || ''] || 'audio/mpeg';
 }
