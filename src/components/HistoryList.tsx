@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import JSZip from 'jszip';
 import { SynthesisHistory } from '@/types/tts';
+import { getAudio } from '@/lib/audioDb';
 
 interface HistoryListProps {
   history: SynthesisHistory[];
@@ -91,11 +92,23 @@ export default function HistoryList({
     return history.filter((item) => selectedIds.has(item.id));
   }, [history, selectedIds]);
 
+  // 解析音频 URL（db:// 从 IndexedDB 加载，否则直接 fetch）
+  const resolveAudioBlob = async (item: SynthesisHistory): Promise<Blob | null> => {
+    if (item.audioUrl.startsWith('db://')) {
+      const id = item.audioUrl.slice(5);
+      const data = await getAudio(id);
+      if (!data) return null;
+      return new Blob([data as unknown as BlobPart], { type: 'audio/wav' });
+    }
+    const response = await fetch(item.audioUrl);
+    return response.blob();
+  };
+
   // 下载单个音频
   const downloadAudio = async (item: SynthesisHistory) => {
     try {
-      const response = await fetch(item.audioUrl);
-      const blob = await response.blob();
+      const blob = await resolveAudioBlob(item);
+      if (!blob) return;
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -120,8 +133,8 @@ export default function HistoryList({
       // 下载所有选中的音频
       const downloadPromises = selectedItems.map(async (item, index) => {
         try {
-          const response = await fetch(item.audioUrl);
-          const blob = await response.blob();
+          const blob = await resolveAudioBlob(item);
+          if (!blob) return;
           const fileName = `${index + 1}_${item.text.substring(0, 20).replace(/[<>:"/\\|?*]/g, '_')}.wav`;
           folder?.file(fileName, blob);
         } catch (error) {
