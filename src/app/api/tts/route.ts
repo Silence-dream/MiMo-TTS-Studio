@@ -2,8 +2,29 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const DEFAULT_API_ENDPOINT = 'https://api.xiaomimimo.com/v1/chat/completions';
 
+// 简单的内存速率限制（滑动窗口，每 IP 每分钟最多 30 次请求）
+const rateLimitMap = new Map<string, number[]>();
+const RATE_LIMIT = 30;
+const RATE_WINDOW_MS = 60_000;
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const timestamps = rateLimitMap.get(ip) || [];
+  const recent = timestamps.filter((t) => now - t < RATE_WINDOW_MS);
+  if (recent.length >= RATE_LIMIT) return false;
+  recent.push(now);
+  rateLimitMap.set(ip, recent);
+  return true;
+}
+
 export async function POST(request: NextRequest) {
   try {
+    // 速率限制
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json({ error: '请求过于频繁，请稍后再试' }, { status: 429 });
+    }
+
     const apiKey = request.headers.get('x-api-key');
     if (!apiKey) {
       return NextResponse.json({ error: '缺少 API Key' }, { status: 400 });
