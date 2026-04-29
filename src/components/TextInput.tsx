@@ -1,6 +1,8 @@
 'use client';
 
 import { useMemo, useRef } from 'react';
+import { Input, Select, Button } from 'antd';
+import { LoadingOutlined } from '@ant-design/icons';
 import { TTSModel } from '@/types/tts';
 
 // 示例文本列表
@@ -50,14 +52,11 @@ export default function TextInput({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 处理示例选择
-  const handleExampleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const index = e.target.value;
-    if (index === '') return;
-    const example = EXAMPLE_LINES[Number(index)];
+  const handleExampleChange = (value: string) => {
+    const example = EXAMPLE_LINES[Number(value)];
     onAssistantContentChange(example.text);
     // 示例已包含风格标签，清空风格指令避免冲突
     onUserMessageChange('');
-    e.target.value = '';
   };
 
   // 处理 txt 文件上传
@@ -98,6 +97,11 @@ export default function TextInput({
     };
   }, [assistantContent]);
 
+  const exampleOptions = EXAMPLE_LINES.map((item, i) => ({
+    value: String(i),
+    label: `${item.label} — ${item.text.replace(/^\([^)]+\)/, '')}`,
+  }));
+
   return (
     <div className="card">
       <div className="flex items-center gap-3 mb-5">
@@ -114,8 +118,7 @@ export default function TextInput({
         <label className="text-sm" style={{ color: 'var(--muted)' }}>
           {isVoiceDesign ? '声音描述 (必填)' : '风格指令 (可选 — 自然语言描述说话风格)'}
         </label>
-        <input
-          type="text"
+        <Input
           value={userMessage}
           onChange={(e) => onUserMessageChange(e.target.value)}
           placeholder="例如：用欢快的语气，语速稍快，句尾语调上扬"
@@ -143,7 +146,7 @@ export default function TextInput({
             </span>
           </div>
         </div>
-        <textarea
+        <Input.TextArea
           value={assistantContent}
           onChange={(e) => onAssistantContentChange(e.target.value)}
           placeholder="输入需要转换为语音的文本内容..."
@@ -157,45 +160,33 @@ export default function TextInput({
             className="hidden"
             onChange={handleFileUpload}
           />
-          <button
-            type="button"
-            className="btn btn-secondary text-xs !py-1.5 !px-3"
-            onClick={() => fileInputRef.current?.click()}
-          >
+          <Button size="small" onClick={() => fileInputRef.current?.click()}>
             📄 上传 TXT
-          </button>
-          <select
-            className="btn btn-secondary text-xs !py-1.5 !px-3 cursor-pointer"
-            value=""
+          </Button>
+          <Select
+            className="min-w-[200px]"
+            placeholder="💡 填入示例"
             onChange={handleExampleChange}
-            style={{ appearance: 'auto' }}
-          >
-            <option value="" disabled>
-              💡 填入示例
-            </option>
-            {EXAMPLE_LINES.map((item, i) => (
-              <option key={item.label} value={i}>
-                {item.label} — {item.text.replace(/^\([^)]+\)/, '')}
-              </option>
-            ))}
-          </select>
+            options={exampleOptions}
+            value={undefined}
+          />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-4 mt-5">
-        <button className="btn btn-primary" onClick={onSynthesize} disabled={isGenerating}>
-          {isGenerating ? (
-            <>
-              <span className="spinner" />
-              合成中...
-            </>
-          ) : (
-            '合成语音'
-          )}
-        </button>
-        <button className="btn btn-secondary" onClick={onClear}>
+        <Button
+          type="primary"
+          size="large"
+          block
+          icon={isGenerating ? <LoadingOutlined spin /> : undefined}
+          onClick={onSynthesize}
+          disabled={isGenerating}
+        >
+          {isGenerating ? '合成中...' : '合成语音'}
+        </Button>
+        <Button size="large" block onClick={onClear}>
           清空内容
-        </button>
+        </Button>
       </div>
     </div>
   );

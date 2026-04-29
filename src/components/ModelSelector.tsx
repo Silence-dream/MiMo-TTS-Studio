@@ -1,5 +1,6 @@
 'use client';
 
+import { Segmented } from 'antd';
 import { TTSModel } from '@/types/tts';
 
 interface ModelSelectorProps {
@@ -26,34 +27,24 @@ const models = [
 ];
 
 export default function ModelSelector({ currentModel, onModelChange }: ModelSelectorProps) {
+  const options = models.map((model) => ({
+    value: model.id,
+    label: (
+      <div className="text-center py-1">
+        <div className="font-semibold text-sm">{model.name}</div>
+        <div className="text-xs opacity-60">{model.description}</div>
+      </div>
+    ),
+  }));
+
   return (
-    <div className="grid grid-cols-3 gap-3 mb-5">
-      {models.map((model) => {
-        const isActive = currentModel === model.id;
-        return (
-          <button
-            key={model.id}
-            className="p-4 rounded-xl text-center cursor-pointer transition-all duration-200"
-            style={{
-              background: isActive ? 'var(--accent-glow)' : 'var(--surface)',
-              border: isActive ? '2px solid var(--accent)' : '1px solid var(--border)',
-              boxShadow: isActive ? 'var(--glow-purple-sm)' : 'none',
-              backdropFilter: 'blur(8px)',
-            }}
-            onClick={() => onModelChange(model.id)}
-          >
-            <div
-              className="font-semibold text-sm mb-1"
-              style={{ color: isActive ? 'var(--accent)' : 'var(--foreground)' }}
-            >
-              {model.name}
-            </div>
-            <div className="text-xs" style={{ color: 'var(--muted)' }}>
-              {model.description}
-            </div>
-          </button>
-        );
-      })}
+    <div className="mb-5">
+      <Segmented
+        block
+        options={options}
+        value={currentModel}
+        onChange={(value) => onModelChange(value as TTSModel)}
+      />
     </div>
   );
 }

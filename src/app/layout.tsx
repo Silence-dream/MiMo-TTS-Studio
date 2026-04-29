@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { AntdProvider } from '@/components/AntdProvider';
 import { ToastProvider } from '@/components/Toast';
 
 export const metadata: Metadata = {
@@ -13,9 +14,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN">
+    <html lang="zh-CN" suppressHydrationWarning>
       <body>
-        <ToastProvider>{children}</ToastProvider>
+        <AntdProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </AntdProvider>
       </body>
     </html>
   );

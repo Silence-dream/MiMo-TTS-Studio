@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { Button, Collapse, Alert, Space } from 'antd';
+import { ExportOutlined, ImportOutlined, ReloadOutlined } from '@ant-design/icons';
 import { getApiKey, getApiEndpoint, setApiKey, setApiEndpoint } from '@/lib/storage';
 
 interface Settings {
@@ -13,7 +15,6 @@ interface Settings {
 }
 
 export default function SettingsManager() {
-  const [isOpen, setIsOpen] = useState(false);
   const [importStatus, setImportStatus] = useState<string | null>(null);
 
   // 导出设置
@@ -50,12 +51,10 @@ export default function SettingsManager() {
       try {
         const settings: Settings = JSON.parse(event.target?.result as string);
 
-        // 验证设置格式
         if (!settings.exportedAt) {
           throw new Error('无效的设置文件');
         }
 
-        // 应用设置
         if (settings.apiKey) {
           setApiKey(settings.apiKey);
         }
@@ -88,83 +87,68 @@ export default function SettingsManager() {
       localStorage.removeItem('theme');
       localStorage.removeItem('format');
       localStorage.removeItem('voice');
-      // 保留 API Key 和 Endpoint
 
       setImportStatus('设置已重置，刷新页面生效');
       setTimeout(() => setImportStatus(null), 5000);
     }
   };
 
+  const collapseContent = (
+    <div>
+      <Space orientation="vertical" className="w-full" size="middle">
+        <Button block icon={<ExportOutlined />} onClick={handleExport}>
+          导出设置
+        </Button>
+
+        <label className="block">
+          <Button block icon={<ImportOutlined />} className="w-full">
+            导入设置
+            <input type="file" accept=".json" onChange={handleImport} className="hidden" />
+          </Button>
+        </label>
+
+        <Button block danger icon={<ReloadOutlined />} onClick={handleReset}>
+          重置设置
+        </Button>
+      </Space>
+
+      {importStatus && (
+        <Alert
+          message={importStatus}
+          type={importStatus.includes('失败') ? 'error' : 'success'}
+          showIcon
+          className="mt-3"
+        />
+      )}
+
+      <div className="mt-3 text-xs" style={{ color: 'var(--muted)' }}>
+        提示：导出的设置文件包含 API Key，请妥善保管
+      </div>
+    </div>
+  );
+
   return (
     <div className="card">
-      <button
-        className="w-full flex items-center justify-between cursor-pointer bg-transparent border-none"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <div className="flex items-center gap-3">
-          <span
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-base"
-            style={{ background: 'var(--accent-glow)', boxShadow: 'var(--glow-purple-sm)' }}
-          >
-            ⚙️
-          </span>
-          <h2 className="text-base font-semibold">设置管理</h2>
-        </div>
-        <span
-          className="text-sm transition-transform"
-          style={{
-            color: 'var(--muted)',
-            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-          }}
-        >
-          ▼
-        </span>
-      </button>
-
-      {isOpen && (
-        <div className="mt-4">
-          <div className="flex flex-col gap-3">
-            {/* 导出按钮 */}
-            <button className="btn btn-secondary" onClick={handleExport}>
-              📤 导出设置
-            </button>
-
-            {/* 导入按钮 */}
-            <label className="btn btn-secondary cursor-pointer">
-              📥 导入设置
-              <input type="file" accept=".json" onChange={handleImport} className="hidden" />
-            </label>
-
-            {/* 重置按钮 */}
-            <button
-              className="btn btn-secondary"
-              onClick={handleReset}
-              style={{ color: 'var(--error)' }}
-            >
-              🔄 重置设置
-            </button>
-          </div>
-
-          {/* 状态提示 */}
-          {importStatus && (
-            <div
-              className="mt-3 p-3 rounded-lg text-sm text-center"
-              style={{
-                background: importStatus.includes('失败')
-                  ? 'rgba(248, 113, 113, 0.1)'
-                  : 'rgba(52, 211, 153, 0.1)',
-                color: importStatus.includes('失败') ? 'var(--error)' : 'var(--success)',
-              }}
-            >
-              {importStatus}
-            </div>
-          )}
-
-          <div className="mt-3 text-xs" style={{ color: 'var(--muted)' }}>
-            提示：导出的设置文件包含 API Key，请妥善保管
-          </div>
-        </div>
-      )}
+      <Collapse
+        ghost
+        items={[
+          {
+            key: 'settings',
+            label: (
+              <div className="flex items-center gap-3">
+                <span
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-base"
+                  style={{ background: 'var(--accent-glow)', boxShadow: 'var(--glow-purple-sm)' }}
+                >
+                  ⚙️
+                </span>
+                <span className="font-semibold">设置管理</span>
+              </div>
+            ),
+            children: collapseContent,
+          },
+        ]}
+      />
     </div>
   );
 }

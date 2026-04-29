@@ -1,6 +1,13 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
+import { Button, Checkbox, Input, Tag, Space, Empty, Spin } from 'antd';
+import {
+  DownloadOutlined,
+  DeleteOutlined,
+  PlayCircleOutlined,
+  SearchOutlined,
+} from '@ant-design/icons';
 import JSZip from 'jszip';
 import { SynthesisHistory } from '@/types/tts';
 import { getAudio } from '@/lib/audioDb';
@@ -213,9 +220,7 @@ export default function HistoryList({
           </span>
           <h2 className="text-base font-semibold">合成历史</h2>
         </div>
-        <div className="text-center py-8" style={{ color: 'var(--muted)' }}>
-          暂无合成记录
-        </div>
+        <Empty description="暂无合成记录" />
       </div>
     );
   }
@@ -237,59 +242,45 @@ export default function HistoryList({
         </div>
 
         {/* 操作按钮 */}
-        <div className="flex gap-2">
-          <button
-            className="px-3 py-1 rounded-lg text-xs cursor-pointer transition-all"
-            style={{
-              background: 'var(--surface)',
-              border: '1px solid var(--border)',
-              color: 'var(--muted)',
-            }}
-            onClick={handleExportJSON}
-          >
+        <Space size="small">
+          <Button size="small" onClick={handleExportJSON}>
             导出 JSON
-          </button>
-          <button
-            className="px-3 py-1 rounded-lg text-xs cursor-pointer transition-all"
-            style={{
-              background: 'var(--surface)',
-              border: '1px solid var(--border)',
-              color: 'var(--muted)',
-            }}
-            onClick={handleExportCSV}
-          >
+          </Button>
+          <Button size="small" onClick={handleExportCSV}>
             导出 CSV
-          </button>
-        </div>
+          </Button>
+        </Space>
       </div>
 
       {/* 搜索框 */}
       <div className="mb-4">
-        <input
-          type="text"
+        <Input
+          prefix={<SearchOutlined />}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="搜索历史记录..."
-          className="text-sm"
+          allowClear
         />
       </div>
 
       {/* 日期筛选 */}
       <div className="flex flex-wrap gap-2 mb-4">
-        <span
-          className={`tag ${!selectedDate ? 'active' : ''}`}
+        <Tag
+          className="cursor-pointer"
+          color={!selectedDate ? 'processing' : undefined}
           onClick={() => setSelectedDate(null)}
         >
           全部
-        </span>
+        </Tag>
         {dates.map((date) => (
-          <span
+          <Tag
             key={date}
-            className={`tag ${selectedDate === date ? 'active' : ''}`}
+            className="cursor-pointer"
+            color={selectedDate === date ? 'processing' : undefined}
             onClick={() => setSelectedDate(selectedDate === date ? null : date)}
           >
             {date}
-          </span>
+          </Tag>
         ))}
       </div>
 
@@ -299,17 +290,15 @@ export default function HistoryList({
         style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
       >
         <div className="flex items-center gap-3">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={selectedIds.size === filteredHistory.length && filteredHistory.length > 0}
-              onChange={toggleSelectAll}
-              className="checkbox-custom"
-            />
+          <Checkbox
+            checked={selectedIds.size === filteredHistory.length && filteredHistory.length > 0}
+            indeterminate={selectedIds.size > 0 && selectedIds.size < filteredHistory.length}
+            onChange={toggleSelectAll}
+          >
             <span className="text-sm" style={{ color: 'var(--muted)' }}>
               全选
             </span>
-          </label>
+          </Checkbox>
           {selectedIds.size > 0 && (
             <span className="text-xs" style={{ color: 'var(--accent)' }}>
               已选 {selectedIds.size} 项
@@ -317,42 +306,24 @@ export default function HistoryList({
           )}
         </div>
 
-        <div className="flex gap-2">
+        <Space size="small">
           {selectedIds.size > 0 && (
             <>
-              <button
-                className="px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-all flex items-center gap-1"
-                style={{
-                  background: 'var(--accent-glow)',
-                  border: '1px solid var(--accent)',
-                  color: 'var(--accent)',
-                }}
+              <Button
+                type="primary"
+                size="small"
+                icon={<DownloadOutlined />}
                 onClick={handleBatchDownload}
-                disabled={isDownloading}
+                loading={isDownloading}
               >
-                {isDownloading ? (
-                  <>
-                    <span className="spinner" style={{ width: '12px', height: '12px' }} />
-                    下载中...
-                  </>
-                ) : (
-                  <>⬇ 批量下载 ZIP</>
-                )}
-              </button>
-              <button
-                className="px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-all"
-                style={{
-                  background: 'rgba(248, 113, 113, 0.1)',
-                  border: '1px solid var(--error)',
-                  color: 'var(--error)',
-                }}
-                onClick={handleDeleteSelected}
-              >
+                批量下载 ZIP
+              </Button>
+              <Button danger size="small" icon={<DeleteOutlined />} onClick={handleDeleteSelected}>
                 删除选中
-              </button>
+              </Button>
             </>
           )}
-        </div>
+        </Space>
       </div>
 
       {/* 历史记录列表 */}
@@ -361,9 +332,7 @@ export default function HistoryList({
         style={{ scrollbarWidth: 'thin', scrollbarColor: 'var(--border) transparent' }}
       >
         {filteredHistory.length === 0 ? (
-          <div className="text-center py-8" style={{ color: 'var(--muted)' }}>
-            没有找到匹配的记录
-          </div>
+          <Empty description="没有找到匹配的记录" />
         ) : (
           filteredHistory.map((item) => (
             <div
@@ -376,32 +345,26 @@ export default function HistoryList({
               onClick={() => onPlay(item)}
             >
               {/* 选择框 */}
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={selectedIds.has(item.id)}
                 onChange={(e) => {
                   e.stopPropagation();
                   toggleSelect(item.id);
                 }}
                 onClick={(e) => e.stopPropagation()}
-                className="checkbox-custom flex-shrink-0"
               />
 
               {/* 播放按钮 */}
-              <button
-                className="w-9 h-9 rounded-full flex items-center justify-center text-sm cursor-pointer flex-shrink-0 transition-all"
-                style={{
-                  background: 'var(--accent-glow)',
-                  color: 'var(--accent)',
-                  border: 'none',
-                }}
+              <Button
+                type="text"
+                shape="circle"
+                icon={<PlayCircleOutlined />}
+                style={{ color: 'var(--accent)' }}
                 onClick={(e) => {
                   e.stopPropagation();
                   onPlay(item);
                 }}
-              >
-                ▶
-              </button>
+              />
 
               {/* 内容 */}
               <div className="flex-1 min-w-0">
@@ -426,36 +389,29 @@ export default function HistoryList({
 
               {/* 操作按钮 */}
               <div className="flex gap-1 flex-shrink-0">
-                <button
-                  className="history-action-btn w-7 h-7 rounded-full flex items-center justify-center text-xs cursor-pointer transition-all"
-                  style={{
-                    background: 'rgba(139, 92, 246, 0.1)',
-                    color: 'var(--accent)',
-                    border: 'none',
-                  }}
+                <Button
+                  className="history-action-btn"
+                  type="text"
+                  size="small"
+                  icon={<DownloadOutlined />}
                   onClick={(e) => {
                     e.stopPropagation();
                     downloadAudio(item);
                   }}
                   title="下载"
-                >
-                  ⬇
-                </button>
-                <button
-                  className="history-action-btn w-7 h-7 rounded-full flex items-center justify-center text-xs cursor-pointer transition-all"
-                  style={{
-                    background: 'rgba(248, 113, 113, 0.1)',
-                    color: 'var(--error)',
-                    border: 'none',
-                  }}
+                />
+                <Button
+                  className="history-action-btn"
+                  type="text"
+                  size="small"
+                  danger
+                  icon={<DeleteOutlined />}
                   onClick={(e) => {
                     e.stopPropagation();
                     onDelete(item.id);
                   }}
                   title="删除"
-                >
-                  ✕
-                </button>
+                />
               </div>
             </div>
           ))

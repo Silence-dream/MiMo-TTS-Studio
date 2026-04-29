@@ -1,80 +1,15 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-
-type Theme = 'light' | 'dark' | 'system';
+import { useTheme } from './ThemeProvider';
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>('system');
-  const [actualTheme, setActualTheme] = useState<'light' | 'dark'>(() => {
-    // 服务端渲染时使用 'dark'，客户端会立即更新
-    if (typeof window === 'undefined') return 'dark';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  });
-
-  // 使用 ref 追踪当前 theme，避免闭包捕获过期值
-  const themeRef = useRef<Theme>(theme);
-  themeRef.current = theme;
-
-  // 获取系统主题偏好
-  const getSystemTheme = useCallback((): 'light' | 'dark' => {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  }, []);
-
-  // 应用主题到 DOM
-  const applyTheme = useCallback((themeToApply: 'light' | 'dark') => {
-    document.documentElement.setAttribute('data-theme', themeToApply);
-    setActualTheme(themeToApply);
-  }, []);
-
-  // 初始化主题
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as Theme | null;
-
-    if (
-      savedTheme &&
-      (savedTheme === 'light' || savedTheme === 'dark' || savedTheme === 'system')
-    ) {
-      setTheme(savedTheme);
-      if (savedTheme === 'system') {
-        applyTheme(getSystemTheme());
-      } else {
-        applyTheme(savedTheme);
-      }
-    } else {
-      setTheme('system');
-      applyTheme(getSystemTheme());
-    }
-  }, [applyTheme, getSystemTheme]);
-
-  // 监听系统主题变化（使用 ref 避免闭包问题）
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = () => {
-      if (themeRef.current === 'system') {
-        applyTheme(getSystemTheme());
-      }
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [applyTheme, getSystemTheme]);
-
-  // 当 theme 状态变化时，应用相应的主题
-  useEffect(() => {
-    if (theme === 'system') {
-      applyTheme(getSystemTheme());
-    } else {
-      applyTheme(theme);
-    }
-  }, [theme, applyTheme, getSystemTheme]);
+  const { theme, actualTheme, setTheme } = useTheme();
 
   const cycleTheme = () => {
-    const themeOrder: Theme[] = ['dark', 'light', 'system'];
+    const themeOrder = ['dark', 'light', 'system'] as const;
     const currentIndex = themeOrder.indexOf(theme);
     const nextTheme = themeOrder[(currentIndex + 1) % themeOrder.length];
     setTheme(nextTheme);
-    localStorage.setItem('theme', nextTheme);
   };
 
   // 获取显示的图标和提示文字

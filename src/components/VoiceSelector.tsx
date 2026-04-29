@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Select, Input, Tag } from 'antd';
 import { TTSModel, BuiltInVoice, AudioFormat } from '@/types/tts';
 import {
   getFavoriteVoices,
@@ -48,10 +49,14 @@ function FormatSelector({
       <label className="text-sm" style={{ color: 'var(--muted)' }}>
         输出格式
       </label>
-      <select value={format} onChange={(e) => onFormatChange(e.target.value as AudioFormat)}>
-        <option value="wav">WAV (完整返回)</option>
-        <option value="pcm16">PCM16 (流式)</option>
-      </select>
+      <Select
+        value={format}
+        onChange={(value) => onFormatChange(value as AudioFormat)}
+        options={[
+          { value: 'wav', label: 'WAV (完整返回)' },
+          { value: 'pcm16', label: 'PCM16 (流式)' },
+        ]}
+      />
     </div>
   );
 }
@@ -103,18 +108,14 @@ export default function VoiceSelector({
                 const v = builtInVoices.find((v) => v.id === voiceId);
                 if (!v) return null;
                 return (
-                  <span
+                  <Tag
                     key={voiceId}
-                    className={`tag ${voice === voiceId ? 'active' : ''}`}
-                    role="button"
-                    tabIndex={0}
+                    className="cursor-pointer"
+                    color={voice === voiceId ? 'processing' : undefined}
                     onClick={() => handleVoiceSelect(v.id)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') handleVoiceSelect(v.id);
-                    }}
                   >
                     {v.name}
-                  </span>
+                  </Tag>
                 );
               })}
             </div>
@@ -132,18 +133,14 @@ export default function VoiceSelector({
                 const v = builtInVoices.find((v) => v.id === voiceId);
                 if (!v) return null;
                 return (
-                  <span
+                  <Tag
                     key={voiceId}
-                    className={`tag ${voice === voiceId ? 'active' : ''}`}
-                    role="button"
-                    tabIndex={0}
+                    className="cursor-pointer"
+                    color={voice === voiceId ? 'processing' : undefined}
                     onClick={() => handleVoiceSelect(v.id)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') handleVoiceSelect(v.id);
-                    }}
                   >
                     ❤️ {v.name}
-                  </span>
+                  </Tag>
                 );
               })}
             </div>
@@ -214,7 +211,7 @@ export default function VoiceSelector({
           <label className="text-sm" style={{ color: 'var(--muted)' }}>
             声音描述
           </label>
-          <textarea
+          <Input.TextArea
             value={voiceDesignPrompt}
             onChange={(e) => onVoiceDesignPromptChange(e.target.value)}
             placeholder="描述你想要的声音，例如：年轻女性，温柔磁性的声音，说话速度适中，带有温暖自信的语气"
@@ -242,8 +239,7 @@ export default function VoiceSelector({
         <label className="text-sm" style={{ color: 'var(--muted)' }}>
           风格指令 (可选)
         </label>
-        <input
-          type="text"
+        <Input
           value={cloneStylePrompt}
           onChange={(e) => onCloneStylePromptChange(e.target.value)}
           placeholder="用自然语言描述说话风格，如：用欢快的语气"

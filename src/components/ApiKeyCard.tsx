@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Input } from 'antd';
+import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 import { getApiKey, setApiKey, getApiEndpoint, setApiEndpoint } from '@/lib/storage';
 
 const DEFAULT_ENDPOINT = 'https://api.xiaomimimo.com/v1/chat/completions';
@@ -13,7 +15,6 @@ interface ApiKeyCardProps {
 export default function ApiKeyCard({ onApiKeyChange, onApiEndpointChange }: ApiKeyCardProps) {
   const [apiKey, setApiKeyState] = useState('');
   const [apiEndpoint, setApiEndpointState] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     const savedKey = getApiKey();
@@ -57,8 +58,7 @@ export default function ApiKeyCard({ onApiKeyChange, onApiEndpointChange }: ApiK
           <label className="text-sm" style={{ color: 'var(--muted)' }}>
             API Endpoint
           </label>
-          <input
-            type="text"
+          <Input
             value={apiEndpoint}
             onChange={(e) => handleEndpointChange(e.target.value)}
             placeholder={DEFAULT_ENDPOINT}
@@ -72,23 +72,12 @@ export default function ApiKeyCard({ onApiKeyChange, onApiEndpointChange }: ApiK
           <label className="text-sm" style={{ color: 'var(--muted)' }}>
             API Key
           </label>
-          <div className="relative">
-            <input
-              type={showPassword ? 'text' : 'password'}
-              value={apiKey}
-              onChange={(e) => handleKeyChange(e.target.value)}
-              placeholder="请输入你的 MiMo API Key"
-              style={{ paddingRight: '44px' }}
-            />
-            <button
-              className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer p-1"
-              style={{ color: 'var(--muted)' }}
-              onClick={() => setShowPassword(!showPassword)}
-              title="显示/隐藏"
-            >
-              👁
-            </button>
-          </div>
+          <Input.Password
+            value={apiKey}
+            onChange={(e) => handleKeyChange(e.target.value)}
+            placeholder="请输入你的 MiMo API Key"
+            iconRender={(visible) => (visible ? <EyeOutlined /> : <EyeInvisibleOutlined />)}
+          />
           <div className="text-xs" style={{ color: 'var(--muted)' }}>
             前往{' '}
             <a

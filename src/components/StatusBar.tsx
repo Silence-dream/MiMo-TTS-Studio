@@ -1,5 +1,7 @@
 'use client';
 
+import { Alert, Progress, Button } from 'antd';
+import { LoadingOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import { SynthesisStatus } from '@/types/tts';
 
 interface StatusBarProps {
@@ -9,50 +11,56 @@ interface StatusBarProps {
 }
 
 export default function StatusBar({ status, message, onCancel }: StatusBarProps) {
+  if (status === 'idle') return null;
+
+  const statusConfig = {
+    loading: {
+      type: 'info' as const,
+      icon: <LoadingOutlined spin />,
+      progressStatus: 'active' as const,
+    },
+    success: {
+      type: 'success' as const,
+      icon: <CheckCircleOutlined />,
+      progressStatus: 'success' as const,
+    },
+    error: {
+      type: 'error' as const,
+      icon: <CloseCircleOutlined />,
+      progressStatus: 'exception' as const,
+    },
+  };
+
+  const config = statusConfig[status];
+
   return (
-    <div
-      className="rounded-xl mb-4 overflow-hidden"
-      style={{
-        background: 'var(--card-hover)',
-      }}
-    >
-      <div className="flex items-center gap-3 p-4 text-sm" style={{ minHeight: '48px' }}>
-        <span className={`status-dot ${status}`} />
-        <span className="flex-1">{message}</span>
-        {status === 'loading' && onCancel && (
-          <button
-            className="px-3 py-1 rounded-lg text-xs cursor-pointer transition-all"
-            style={{
-              background: 'rgba(248, 113, 113, 0.1)',
-              border: '1px solid var(--error)',
-              color: 'var(--error)',
-            }}
-            onClick={onCancel}
-          >
-            取消
-          </button>
-        )}
-      </div>
-
-      {/* 进度条 */}
+    <div className="mb-4">
+      <Alert
+        title={message}
+        type={config.type}
+        icon={config.icon}
+        showIcon
+        action={
+          status === 'loading' && onCancel ? (
+            <Button size="small" danger onClick={onCancel}>
+              取消
+            </Button>
+          ) : undefined
+        }
+      />
       {status === 'loading' && (
-        <div className="progress-bar-container">
-          <div className="progress-bar" />
-        </div>
+        <Progress
+          percent={100}
+          status={config.progressStatus}
+          showInfo={false}
+          strokeColor="#8b5cf6"
+        />
       )}
-
-      {/* 成功状态的进度条 */}
       {status === 'success' && (
-        <div className="progress-bar-container">
-          <div className="progress-bar progress-bar-success" />
-        </div>
+        <Progress percent={100} status={config.progressStatus} showInfo={false} />
       )}
-
-      {/* 错误状态的进度条 */}
       {status === 'error' && (
-        <div className="progress-bar-container">
-          <div className="progress-bar progress-bar-error" />
-        </div>
+        <Progress percent={100} status={config.progressStatus} showInfo={false} />
       )}
     </div>
   );

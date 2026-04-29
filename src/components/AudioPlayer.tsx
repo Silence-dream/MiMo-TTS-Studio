@@ -1,6 +1,8 @@
 'use client';
 
 import { useRef, useEffect, useState, useCallback } from 'react';
+import { Button } from 'antd';
+import { DownloadOutlined } from '@ant-design/icons';
 import { formatFileSize } from '@/lib/audio';
 
 interface AudioPlayerProps {
@@ -64,7 +66,6 @@ export default function AudioPlayer({ audioUrl, audioSize }: AudioPlayerProps) {
 
       ctx.clearRect(0, 0, width, height);
 
-      // 背景渐变
       const gradient = ctx.createLinearGradient(0, 0, 0, height);
       gradient.addColorStop(0, 'rgba(139, 92, 246, 0.3)');
       gradient.addColorStop(1, 'rgba(139, 92, 246, 0.05)');
@@ -75,7 +76,6 @@ export default function AudioPlayer({ audioUrl, audioSize }: AudioPlayerProps) {
       for (let i = 0; i < bufferLength; i++) {
         const barHeight = (dataArray[i] / 255) * height;
 
-        // 使用渐变色
         const barGradient = ctx.createLinearGradient(0, height - barHeight, 0, height);
         barGradient.addColorStop(0, '#8b5cf6');
         barGradient.addColorStop(1, 'rgba(139, 92, 246, 0.3)');
@@ -83,7 +83,6 @@ export default function AudioPlayer({ audioUrl, audioSize }: AudioPlayerProps) {
         ctx.fillStyle = barGradient;
         ctx.fillRect(x, height - barHeight, barWidth, barHeight);
 
-        // 添加高光效果
         ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
         ctx.fillRect(x, height - barHeight, barWidth, 2);
 
@@ -204,18 +203,14 @@ export default function AudioPlayer({ audioUrl, audioSize }: AudioPlayerProps) {
         style={{ color: 'var(--muted)' }}
       >
         <span>大小: {formatFileSize(audioSize)}</span>
-        <a
+        <Button
+          type="primary"
+          icon={<DownloadOutlined />}
           href={audioUrl}
           download={`tts_${Date.now()}.wav`}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all no-underline"
-          style={{
-            background: 'var(--accent-glow)',
-            color: 'var(--accent)',
-            border: '1px solid var(--accent)',
-          }}
         >
-          ⬇ 下载音频
-        </a>
+          下载音频
+        </Button>
       </div>
     </div>
   );

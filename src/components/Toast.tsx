@@ -1,14 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback, createContext, useContext, ReactNode } from 'react';
-
-type ToastType = 'success' | 'error' | 'warning' | 'info';
-
-interface Toast {
-  id: string;
-  message: string;
-  type: ToastType;
-}
+import { createContext, useContext, ReactNode } from 'react';
+import { App } from 'antd';
+import type { MessageInstance } from 'antd/es/message/interface';
 
 interface ToastContextType {
   toast: {
@@ -29,74 +23,23 @@ export function useToast() {
   return context.toast;
 }
 
-export function ToastProvider({ children }: { children: ReactNode }) {
-  const [toasts, setToasts] = useState<Toast[]>([]);
-
-  const addToast = useCallback((message: string, type: ToastType) => {
-    const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    setToasts((prev) => [...prev, { id, message, type }]);
-    // 移除逻辑由 ToastItem 组件内部控制（含退出动画）
-  }, []);
+function ToastProviderInner({ children }: { children: ReactNode }) {
+  const { message } = App.useApp();
 
   const toast = {
-    success: (message: string) => addToast(message, 'success'),
-    error: (message: string) => addToast(message, 'error'),
-    warning: (message: string) => addToast(message, 'warning'),
-    info: (message: string) => addToast(message, 'info'),
+    success: (msg: string) => message.success(msg),
+    error: (msg: string) => message.error(msg),
+    warning: (msg: string) => message.warning(msg),
+    info: (msg: string) => message.info(msg),
   };
 
-  return (
-    <ToastContext.Provider value={{ toast }}>
-      {children}
-      <ToastContainer
-        toasts={toasts}
-        onRemove={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))}
-      />
-    </ToastContext.Provider>
-  );
+  return <ToastContext.Provider value={{ toast }}>{children}</ToastContext.Provider>;
 }
 
-function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: string) => void }) {
+export function ToastProvider({ children }: { children: ReactNode }) {
   return (
-    <div className="toast-container">
-      {toasts.map((toast) => (
-        <ToastItem key={toast.id} toast={toast} onRemove={onRemove} />
-      ))}
-    </div>
-  );
-}
-
-function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) => void }) {
-  const [isExiting, setIsExiting] = useState(false);
-
-  const handleRemove = useCallback(() => {
-    setIsExiting(true);
-    setTimeout(() => onRemove(toast.id), 300);
-  }, [toast.id, onRemove]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsExiting(true);
-      setTimeout(() => onRemove(toast.id), 300);
-    }, 2700);
-
-    return () => clearTimeout(timer);
-  }, [toast.id, onRemove]);
-
-  const icons: Record<ToastType, string> = {
-    success: '✓',
-    error: '✕',
-    warning: '⚠',
-    info: 'ℹ',
-  };
-
-  return (
-    <div
-      className={`toast-item toast-${toast.type} ${isExiting ? 'toast-exit' : ''}`}
-      onClick={handleRemove}
-    >
-      <span className="toast-icon">{icons[toast.type]}</span>
-      <span className="toast-message">{toast.message}</span>
-    </div>
+    <App>
+      <ToastProviderInner>{children}</ToastProviderInner>
+    </App>
   );
 }

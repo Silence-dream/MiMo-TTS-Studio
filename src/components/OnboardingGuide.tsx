@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Modal, Steps, Button, Space } from 'antd';
 
 interface Step {
   title: string;
@@ -41,10 +42,8 @@ export default function OnboardingGuide() {
   const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
-    // 检查是否是首次访问
     const hasSeenGuide = localStorage.getItem('has_seen_guide');
     if (!hasSeenGuide) {
-      // 延迟显示，让页面先加载完成
       const timer = setTimeout(() => {
         setIsVisible(true);
       }, 1000);
@@ -71,66 +70,53 @@ export default function OnboardingGuide() {
     }
   };
 
-  const handleSkip = () => {
-    handleClose();
-  };
-
-  if (!isVisible) return null;
-
   const step = steps[currentStep];
 
   return (
-    <div className="onboarding-overlay">
-      <div className="onboarding-modal">
-        {/* 进度指示器 */}
-        <div className="flex justify-center gap-2 mb-6">
-          {steps.map((_, index) => (
-            <div
-              key={index}
-              className="w-2 h-2 rounded-full transition-all"
-              style={{
-                background: index === currentStep ? 'var(--accent)' : 'var(--border)',
-                transform: index === currentStep ? 'scale(1.2)' : 'scale(1)',
-              }}
-            />
-          ))}
-        </div>
+    <Modal
+      open={isVisible}
+      footer={null}
+      closable={false}
+      centered
+      width={420}
+      styles={{ body: { padding: '24px 0' } }}
+    >
+      <Steps
+        current={currentStep}
+        size="small"
+        className="mb-6 px-6"
+        items={steps.map((s, i) => ({
+          title: '',
+        }))}
+      />
 
-        {/* 内容 */}
-        <div className="text-center mb-8">
-          <span className="text-5xl mb-4 block">{step.icon}</span>
-          <h2 className="text-xl font-semibold mb-3" style={{ color: 'var(--foreground)' }}>
-            {step.title}
-          </h2>
-          <p className="text-sm" style={{ color: 'var(--foreground-secondary)' }}>
-            {step.content}
-          </p>
-        </div>
-
-        {/* 按钮 */}
-        <div className="flex gap-3">
-          {currentStep > 0 && (
-            <button className="btn btn-secondary flex-1" onClick={handlePrev}>
-              上一步
-            </button>
-          )}
-
-          <button className="btn btn-primary flex-1" onClick={handleNext}>
-            {currentStep === steps.length - 1 ? '开始使用' : '下一步'}
-          </button>
-        </div>
-
-        {/* 跳过按钮 */}
-        {currentStep < steps.length - 1 && (
-          <button
-            className="w-full mt-3 text-sm cursor-pointer bg-transparent border-none"
-            style={{ color: 'var(--muted)' }}
-            onClick={handleSkip}
-          >
-            跳过引导
-          </button>
-        )}
+      <div className="text-center mb-8 px-6">
+        <span className="text-5xl mb-4 block">{step.icon}</span>
+        <h2 className="text-xl font-semibold mb-3">{step.title}</h2>
+        <p className="text-sm" style={{ color: 'var(--foreground-secondary)' }}>
+          {step.content}
+        </p>
       </div>
-    </div>
+
+      <div className="px-6">
+        <Space className="w-full" orientation="vertical" size="small">
+          <div className="flex gap-3">
+            {currentStep > 0 && (
+              <Button className="flex-1" onClick={handlePrev}>
+                上一步
+              </Button>
+            )}
+            <Button type="primary" className="flex-1" onClick={handleNext}>
+              {currentStep === steps.length - 1 ? '开始使用' : '下一步'}
+            </Button>
+          </div>
+          {currentStep < steps.length - 1 && (
+            <Button type="text" block onClick={handleClose} style={{ color: 'var(--muted)' }}>
+              跳过引导
+            </Button>
+          )}
+        </Space>
+      </div>
+    </Modal>
   );
 }
