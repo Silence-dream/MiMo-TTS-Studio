@@ -4,12 +4,13 @@ const DEFAULT_API_ENDPOINT = 'https://api.xiaomimimo.com/v1/chat/completions';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { apiEndpoint, apiKey, ...rest } = body;
-
+    const apiKey = request.headers.get('x-api-key');
     if (!apiKey) {
       return NextResponse.json({ error: '缺少 API Key' }, { status: 400 });
     }
+
+    const body = await request.json();
+    const { apiEndpoint, ...rest } = body;
 
     const targetUrl = apiEndpoint || DEFAULT_API_ENDPOINT;
 

@@ -23,7 +23,6 @@ export async function synthesizeNonStreaming(params: SynthesizeParams): Promise<
   const { apiKey, apiEndpoint, model, messages, format, voice, signal } = params;
 
   const body: Record<string, unknown> = {
-    apiKey,
     apiEndpoint,
     model,
     messages,
@@ -37,6 +36,7 @@ export async function synthesizeNonStreaming(params: SynthesizeParams): Promise<
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'x-api-key': apiKey,
     },
     body: JSON.stringify(body),
     signal,
@@ -71,7 +71,6 @@ export async function synthesizeStreaming(params: SynthesizeParams): Promise<Uin
   const { apiKey, apiEndpoint, model, messages, format, voice, signal } = params;
 
   const body: Record<string, unknown> = {
-    apiKey,
     apiEndpoint,
     model,
     messages,
@@ -86,6 +85,7 @@ export async function synthesizeStreaming(params: SynthesizeParams): Promise<Uin
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'x-api-key': apiKey,
     },
     body: JSON.stringify(body),
     signal,
