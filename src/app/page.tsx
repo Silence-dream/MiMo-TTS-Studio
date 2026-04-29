@@ -275,11 +275,11 @@ export default function Home() {
 
       try {
         const results: { text: string; audioUrl: string; audioSize: number }[] = [];
+        let completedCount = 0;
+        const CONCURRENCY = 3;
 
-        for (let i = 0; i < texts.length; i++) {
-          setStatusMessage(`批量合成中 (${i + 1}/${texts.length})...`);
-
-          const messages = [{ role: 'assistant' as const, content: texts[i] }];
+        const synthesizeOne = async (text: string, index: number) => {
+          const messages = [{ role: 'assistant' as const, content: text }];
           const params = {
             apiKey,
             apiEndpoint: apiEndpoint || undefined,
@@ -297,18 +297,36 @@ export default function Home() {
           }
 
           const url = createAudioUrl(audioBytes);
-          results.push({ text: texts[i], audioUrl: url, audioSize: audioBytes.length });
+          results[index] = { text, audioUrl: url, audioSize: audioBytes.length };
+
+          completedCount++;
+          setStatusMessage(`批量合成中 (${completedCount}/${texts.length})...`);
 
           // 添加到历史记录
           const newHistory = addHistory({
-            text: texts[i].substring(0, 100),
+            text: text.substring(0, 100),
             model,
             voice: model === 'mimo-v2.5-tts' ? voice : undefined,
             audioUrl: url,
             audioSize: audioBytes.length,
           });
           setHistory(newHistory);
+        };
+
+        // 并发执行，限制最大并发数
+        const queue = texts.map((text, i) => () => synthesizeOne(text, i));
+        const executing = new Set<Promise<void>>();
+
+        for (const task of queue) {
+          const p = task().then(() => {
+            executing.delete(p);
+          });
+          executing.add(p);
+          if (executing.size >= CONCURRENCY) {
+            await Promise.race(executing);
+          }
         }
+        await Promise.all(executing);
 
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
         setStatus('success');
