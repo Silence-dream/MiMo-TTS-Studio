@@ -1,17 +1,13 @@
 import type { NextConfig } from 'next';
-import { codeInspectorPlugin } from 'code-inspector-plugin';
 
-const nextConfig: NextConfig = {
-  // 允许外部 API 请求
-  async rewrites() {
-    return [];
-  },
+const nextConfig: NextConfig = {};
 
-  turbopack: {
-    rules: codeInspectorPlugin({
-      bundler: 'turbopack',
-    }),
-  },
-};
+// code-inspector-plugin 仅在开发环境启用
+if (process.env.NODE_ENV === 'development') {
+  const { codeInspectorPlugin } = require('code-inspector-plugin');
+  nextConfig.turbopack = {
+    rules: codeInspectorPlugin({ bundler: 'turbopack' }),
+  };
+}
 
 export default nextConfig;
