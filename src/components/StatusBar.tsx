@@ -5,9 +5,10 @@ import { SynthesisStatus } from '@/types/tts';
 interface StatusBarProps {
   status: SynthesisStatus;
   message: string;
+  onCancel?: () => void;
 }
 
-export default function StatusBar({ status, message }: StatusBarProps) {
+export default function StatusBar({ status, message, onCancel }: StatusBarProps) {
   return (
     <div
       className="rounded-xl mb-4 overflow-hidden"
@@ -17,7 +18,20 @@ export default function StatusBar({ status, message }: StatusBarProps) {
     >
       <div className="flex items-center gap-3 p-4 text-sm" style={{ minHeight: '48px' }}>
         <span className={`status-dot ${status}`} />
-        <span>{message}</span>
+        <span className="flex-1">{message}</span>
+        {status === 'loading' && onCancel && (
+          <button
+            className="px-3 py-1 rounded-lg text-xs cursor-pointer transition-all"
+            style={{
+              background: 'rgba(248, 113, 113, 0.1)',
+              border: '1px solid var(--error)',
+              color: 'var(--error)',
+            }}
+            onClick={onCancel}
+          >
+            取消
+          </button>
+        )}
       </div>
 
       {/* 进度条 */}

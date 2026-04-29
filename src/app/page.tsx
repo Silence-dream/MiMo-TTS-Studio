@@ -54,6 +54,7 @@ export default function Home() {
   const [history, setHistory] = useState<SynthesisHistory[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const audioUrlRef = useRef<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // 加载历史记录
   useEffect(() => {
@@ -116,6 +117,8 @@ export default function Home() {
       return;
     }
 
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
     setIsGenerating(true);
     setStatus('loading');
     setStatusMessage('正在请求 MiMo TTS API...');
@@ -149,6 +152,7 @@ export default function Home() {
         model,
         messages,
         format,
+        signal: controller.signal,
       };
 
       // 设置音色
@@ -192,12 +196,19 @@ export default function Home() {
       setStatusMessage(`合成完成，耗时 ${elapsed}s`);
       toast.success(`合成完成，耗时 ${elapsed}s`);
     } catch (error) {
-      console.error('合成失败:', error);
-      const errorMsg = error instanceof Error ? error.message : '未知错误';
-      setStatus('error');
-      setStatusMessage(`合成失败: ${errorMsg}`);
-      toast.error(`合成失败: ${errorMsg}`);
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        setStatus('idle');
+        setStatusMessage('合成已取消');
+        toast.warning('合成已取消');
+      } else {
+        console.error('合成失败:', error);
+        const errorMsg = error instanceof Error ? error.message : '未知错误';
+        setStatus('error');
+        setStatusMessage(`合成失败: ${errorMsg}`);
+        toast.error(`合成失败: ${errorMsg}`);
+      }
     } finally {
+      abortControllerRef.current = null;
       setIsGenerating(false);
     }
   }, [
@@ -213,6 +224,11 @@ export default function Home() {
     userMessage,
     assistantContent,
   ]);
+
+  // 处理取消合成
+  const handleCancel = useCallback(() => {
+    abortControllerRef.current?.abort();
+  }, []);
 
   // 处理清空
   const handleClear = useCallback(() => {
@@ -431,7 +447,7 @@ export default function Home() {
         />
 
         {/* Status Bar */}
-        <StatusBar status={status} message={statusMessage} />
+        <StatusBar status={status} message={statusMessage} onCancel={handleCancel} />
 
         {/* Audio Player */}
         <AudioPlayer audioUrl={audioUrl} audioSize={audioSize} />
