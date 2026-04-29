@@ -80,7 +80,16 @@ export default function StylePresets({ onInsertTag }: StylePresetsProps) {
             </label>
             <div className="flex flex-wrap gap-2">
               {emotionTags.map((tag) => (
-                <span key={tag.tag} className="tag" onClick={() => onInsertTag(tag.tag, true)}>
+                <span
+                  key={tag.tag}
+                  className="tag"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => onInsertTag(tag.tag, true)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') onInsertTag(tag.tag, true);
+                  }}
+                >
                   {tag.emoji} {tag.label}
                 </span>
               ))}
@@ -95,7 +104,16 @@ export default function StylePresets({ onInsertTag }: StylePresetsProps) {
             </label>
             <div className="flex flex-wrap gap-2">
               {dialectTags.map((tag) => (
-                <span key={tag.tag} className="tag" onClick={() => onInsertTag(tag.tag, true)}>
+                <span
+                  key={tag.tag}
+                  className="tag"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => onInsertTag(tag.tag, true)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') onInsertTag(tag.tag, true);
+                  }}
+                >
                   {tag.emoji} {tag.label}
                 </span>
               ))}
@@ -110,7 +128,16 @@ export default function StylePresets({ onInsertTag }: StylePresetsProps) {
             </label>
             <div className="flex flex-wrap gap-2">
               {audioTags.map((tag) => (
-                <span key={tag.tag} className="tag" onClick={() => onInsertTag(tag.tag, false)}>
+                <span
+                  key={tag.tag}
+                  className="tag"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => onInsertTag(tag.tag, false)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') onInsertTag(tag.tag, false);
+                  }}
+                >
                   {tag.emoji} {tag.label}
                 </span>
               ))}

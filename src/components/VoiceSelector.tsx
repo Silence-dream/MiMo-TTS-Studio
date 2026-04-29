@@ -106,7 +106,12 @@ export default function VoiceSelector({
                   <span
                     key={voiceId}
                     className={`tag ${voice === voiceId ? 'active' : ''}`}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => handleVoiceSelect(v.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') handleVoiceSelect(v.id);
+                    }}
                   >
                     {v.name}
                   </span>
@@ -130,7 +135,12 @@ export default function VoiceSelector({
                   <span
                     key={voiceId}
                     className={`tag ${voice === voiceId ? 'active' : ''}`}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => handleVoiceSelect(v.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') handleVoiceSelect(v.id);
+                    }}
                   >
                     ❤️ {v.name}
                   </span>
@@ -154,7 +164,12 @@ export default function VoiceSelector({
                   background: voice === v.id ? 'var(--accent-glow)' : 'var(--surface)',
                   border: `1px solid ${voice === v.id ? 'var(--accent)' : 'var(--border)'}`,
                 }}
+                role="button"
+                tabIndex={0}
                 onClick={() => handleVoiceSelect(v.id)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') handleVoiceSelect(v.id);
+                }}
               >
                 <div className="flex-1">
                   <div className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>
