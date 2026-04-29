@@ -36,6 +36,26 @@ const builtInVoices: Array<{ id: BuiltInVoice; name: string; language: string; g
   { id: 'Dean', name: 'Dean', language: '英文', gender: '男声' },
 ];
 
+function FormatSelector({
+  format,
+  onFormatChange,
+}: {
+  format: AudioFormat;
+  onFormatChange: (format: AudioFormat) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <label className="text-sm" style={{ color: 'var(--muted)' }}>
+        输出格式
+      </label>
+      <select value={format} onChange={(e) => onFormatChange(e.target.value as AudioFormat)}>
+        <option value="wav">WAV (完整返回)</option>
+        <option value="pcm16">PCM16 (流式)</option>
+      </select>
+    </div>
+  );
+}
+
 export default function VoiceSelector({
   model,
   voice,
@@ -166,16 +186,7 @@ export default function VoiceSelector({
           </div>
         </div>
 
-        {/* 输出格式 */}
-        <div className="flex flex-col gap-2">
-          <label className="text-sm" style={{ color: 'var(--muted)' }}>
-            输出格式
-          </label>
-          <select value={format} onChange={(e) => onFormatChange(e.target.value as AudioFormat)}>
-            <option value="wav">WAV (完整返回)</option>
-            <option value="pcm16">PCM16 (流式)</option>
-          </select>
-        </div>
+        <FormatSelector format={format} onFormatChange={onFormatChange} />
       </div>
     );
   }
@@ -198,15 +209,7 @@ export default function VoiceSelector({
             描述维度参考：性别与年龄、音色质感、情绪语调、语速节奏、角色身份、说话风格
           </div>
         </div>
-        <div className="flex flex-col gap-2">
-          <label className="text-sm" style={{ color: 'var(--muted)' }}>
-            输出格式
-          </label>
-          <select value={format} onChange={(e) => onFormatChange(e.target.value as AudioFormat)}>
-            <option value="wav">WAV (完整返回)</option>
-            <option value="pcm16">PCM16 (流式)</option>
-          </select>
-        </div>
+        <FormatSelector format={format} onFormatChange={onFormatChange} />
       </div>
     );
   }
@@ -231,14 +234,8 @@ export default function VoiceSelector({
           placeholder="用自然语言描述说话风格，如：用欢快的语气"
         />
       </div>
-      <div className="flex flex-col gap-2 mt-4">
-        <label className="text-sm" style={{ color: 'var(--muted)' }}>
-          输出格式
-        </label>
-        <select value={format} onChange={(e) => onFormatChange(e.target.value as AudioFormat)}>
-          <option value="wav">WAV (完整返回)</option>
-          <option value="pcm16">PCM16 (流式)</option>
-        </select>
+      <div className="mt-4">
+        <FormatSelector format={format} onFormatChange={onFormatChange} />
       </div>
     </div>
   );
