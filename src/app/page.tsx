@@ -52,6 +52,7 @@ export default function Home() {
     handleClear,
     handlePlayHistory,
     handleDeleteHistory,
+    handleDeleteHistories,
     handleBatchSynthesize,
   } = useSynthesis();
 
@@ -192,7 +193,12 @@ export default function Home() {
         <AudioPlayer audioUrl={audioUrl} audioSize={audioSize} />
 
         {/* History */}
-        <HistoryList history={history} onPlay={handlePlayHistory} onDelete={handleDeleteHistory} />
+        <HistoryList
+          history={history}
+          onPlay={handlePlayHistory}
+          onDelete={handleDeleteHistory}
+          onDeleteBatch={handleDeleteHistories}
+        />
       </div>
 
       {/* Footer */}

@@ -8,9 +8,15 @@ interface HistoryListProps {
   history: SynthesisHistory[];
   onPlay: (item: SynthesisHistory) => void;
   onDelete: (id: string) => void;
+  onDeleteBatch: (ids: string[]) => void;
 }
 
-export default function HistoryList({ history, onPlay, onDelete }: HistoryListProps) {
+export default function HistoryList({
+  history,
+  onPlay,
+  onDelete,
+  onDeleteBatch,
+}: HistoryListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -178,7 +184,7 @@ export default function HistoryList({ history, onPlay, onDelete }: HistoryListPr
 
   // 删除选中项
   const handleDeleteSelected = () => {
-    selectedIds.forEach((id) => onDelete(id));
+    onDeleteBatch(Array.from(selectedIds));
     setSelectedIds(new Set());
   };
 

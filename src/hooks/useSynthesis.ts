@@ -15,7 +15,7 @@ import {
   getFileMimeType,
 } from '@/lib/api';
 import { createAudioUrl, revokeAudioUrl } from '@/lib/audio';
-import { getHistory, addHistory, deleteHistory } from '@/lib/storage';
+import { getHistory, addHistory, deleteHistory, deleteHistories } from '@/lib/storage';
 import { getAudio } from '@/lib/audioDb';
 import { useToast } from '@/components/Toast';
 
@@ -246,6 +246,15 @@ export function useSynthesis() {
     [toast]
   );
 
+  const handleDeleteHistories = useCallback(
+    async (ids: string[]) => {
+      const newHistory = await deleteHistories(ids);
+      setHistory(newHistory);
+      toast.success(`已删除 ${ids.length} 条历史记录`);
+    },
+    [toast]
+  );
+
   const handleBatchSynthesize = useCallback(
     async (texts: string[], apiKey: string, apiEndpoint: string) => {
       if (!apiKey) {
@@ -360,6 +369,7 @@ export function useSynthesis() {
     handleClear,
     handlePlayHistory,
     handleDeleteHistory,
+    handleDeleteHistories,
     handleBatchSynthesize,
   };
 }

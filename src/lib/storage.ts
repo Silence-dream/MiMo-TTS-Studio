@@ -115,15 +115,27 @@ export async function clearHistory(): Promise<SynthesisHistory[]> {
  * 删除单条历史记录
  */
 export async function deleteHistory(id: string): Promise<SynthesisHistory[]> {
+  return deleteHistories([id]);
+}
+
+/**
+ * 批量删除历史记录（一次 IndexedDB 事务 + 一次 localStorage 写入）
+ */
+export async function deleteHistories(ids: string[]): Promise<SynthesisHistory[]> {
   const history = getHistory();
-  const target = history.find((item) => item.id === id);
+  const idSet = new Set(ids);
+
   // 释放 Blob URL
-  if (target?.audioUrl.startsWith('blob:')) {
-    URL.revokeObjectURL(target.audioUrl);
+  for (const item of history) {
+    if (idSet.has(item.id) && item.audioUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(item.audioUrl);
+    }
   }
-  // 从 IndexedDB 删除音频数据
-  await deleteAudio(id);
-  const filtered = history.filter((item) => item.id !== id);
+
+  // 从 IndexedDB 批量删除音频数据
+  await Promise.all(ids.map((id) => deleteAudio(id)));
+
+  const filtered = history.filter((item) => !idSet.has(item.id));
   saveHistory(filtered);
   return filtered;
 }
