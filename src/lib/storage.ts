@@ -1,4 +1,5 @@
 import { SynthesisHistory } from '@/types/tts';
+import { saveAudio, deleteAudio, clearAllAudio } from './audioDb';
 
 const API_KEY_STORAGE_KEY = 'mimo_api_key';
 const API_ENDPOINT_STORAGE_KEY = 'mimo_api_endpoint';
@@ -53,26 +54,39 @@ export function getHistory(): SynthesisHistory[] {
 }
 
 /**
- * 添加合成历史
+ * 添加合成历史（音频数据存入 IndexedDB，localStorage 只存 db:// 引用）
  */
-export function addHistory(item: Omit<SynthesisHistory, 'id' | 'createdAt'>): SynthesisHistory[] {
+export async function addHistory(
+  item: Omit<SynthesisHistory, 'id' | 'createdAt'>,
+  audioBytes?: Uint8Array
+): Promise<SynthesisHistory[]> {
   const history = getHistory();
+  const id = generateId();
+  const dbUrl = `db://${id}`;
+
+  // 将音频数据存入 IndexedDB
+  if (audioBytes) {
+    await saveAudio(id, audioBytes);
+  }
+
   const newItem: SynthesisHistory = {
     ...item,
-    id: generateId(),
+    id,
+    audioUrl: dbUrl,
     createdAt: Date.now(),
   };
 
   history.unshift(newItem);
 
-  // 限制历史记录数量，释放被移除项的 Blob URL
+  // 限制历史记录数量，删除被移除项的音频数据
   if (history.length > MAX_HISTORY_ITEMS) {
     const removed = history.splice(MAX_HISTORY_ITEMS);
-    removed.forEach((item) => {
+    for (const item of removed) {
       if (item.audioUrl.startsWith('blob:')) {
         URL.revokeObjectURL(item.audioUrl);
       }
-    });
+      await deleteAudio(item.id);
+    }
   }
 
   saveHistory(history);
@@ -82,7 +96,7 @@ export function addHistory(item: Omit<SynthesisHistory, 'id' | 'createdAt'>): Sy
 /**
  * 清空合成历史
  */
-export function clearHistory(): SynthesisHistory[] {
+export async function clearHistory(): Promise<SynthesisHistory[]> {
   if (typeof window === 'undefined') return [];
   const history = getHistory();
   // 释放所有 Blob URL
@@ -91,6 +105,8 @@ export function clearHistory(): SynthesisHistory[] {
       URL.revokeObjectURL(item.audioUrl);
     }
   });
+  // 清空 IndexedDB 中的音频数据
+  await clearAllAudio();
   localStorage.removeItem(HISTORY_STORAGE_KEY);
   return [];
 }
@@ -98,13 +114,15 @@ export function clearHistory(): SynthesisHistory[] {
 /**
  * 删除单条历史记录
  */
-export function deleteHistory(id: string): SynthesisHistory[] {
+export async function deleteHistory(id: string): Promise<SynthesisHistory[]> {
   const history = getHistory();
   const target = history.find((item) => item.id === id);
-  // 释放被删除项的 Blob URL
+  // 释放 Blob URL
   if (target?.audioUrl.startsWith('blob:')) {
     URL.revokeObjectURL(target.audioUrl);
   }
+  // 从 IndexedDB 删除音频数据
+  await deleteAudio(id);
   const filtered = history.filter((item) => item.id !== id);
   saveHistory(filtered);
   return filtered;

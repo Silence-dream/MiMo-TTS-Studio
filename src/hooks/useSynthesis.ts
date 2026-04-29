@@ -16,6 +16,7 @@ import {
 } from '@/lib/api';
 import { createAudioUrl, revokeAudioUrl } from '@/lib/audio';
 import { getHistory, addHistory, deleteHistory } from '@/lib/storage';
+import { getAudio } from '@/lib/audioDb';
 import { useToast } from '@/components/Toast';
 
 export function useSynthesis() {
@@ -150,13 +151,16 @@ export function useSynthesis() {
         setAudioUrl(url);
         setAudioSize(audioBytes.length);
 
-        const newHistory = addHistory({
-          text: assistantContent.substring(0, 100),
-          model,
-          voice: model === 'mimo-v2.5-tts' ? voice : undefined,
-          audioUrl: url,
-          audioSize: audioBytes.length,
-        });
+        const newHistory = await addHistory(
+          {
+            text: assistantContent.substring(0, 100),
+            model,
+            voice: model === 'mimo-v2.5-tts' ? voice : undefined,
+            audioUrl: url,
+            audioSize: audioBytes.length,
+          },
+          audioBytes
+        );
         setHistory(newHistory);
 
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
@@ -210,14 +214,32 @@ export function useSynthesis() {
     setStatusMessage('就绪，等待合成');
   }, []);
 
-  const handlePlayHistory = useCallback((item: SynthesisHistory) => {
-    setAudioUrl(item.audioUrl);
-    setAudioSize(item.audioSize);
-  }, []);
+  const handlePlayHistory = useCallback(
+    async (item: SynthesisHistory) => {
+      let playUrl = item.audioUrl;
+
+      // 从 IndexedDB 加载音频数据并创建 blob URL
+      if (item.audioUrl.startsWith('db://')) {
+        const id = item.audioUrl.slice(5);
+        const audioBytes = await getAudio(id);
+        if (!audioBytes) {
+          toast.error('音频数据不存在，可能已被清除');
+          return;
+        }
+        playUrl = createAudioUrl(audioBytes);
+      }
+
+      if (audioUrlRef.current) revokeAudioUrl(audioUrlRef.current);
+      audioUrlRef.current = playUrl;
+      setAudioUrl(playUrl);
+      setAudioSize(item.audioSize);
+    },
+    [toast]
+  );
 
   const handleDeleteHistory = useCallback(
-    (id: string) => {
-      const newHistory = deleteHistory(id);
+    async (id: string) => {
+      const newHistory = await deleteHistory(id);
       setHistory(newHistory);
       toast.success('已删除历史记录');
     },
@@ -265,13 +287,16 @@ export function useSynthesis() {
           completedCount++;
           setStatusMessage(`批量合成中 (${completedCount}/${texts.length})...`);
 
-          const newHistory = addHistory({
-            text: text.substring(0, 100),
-            model,
-            voice: model === 'mimo-v2.5-tts' ? voice : undefined,
-            audioUrl: url,
-            audioSize: audioBytes.length,
-          });
+          const newHistory = await addHistory(
+            {
+              text: text.substring(0, 100),
+              model,
+              voice: model === 'mimo-v2.5-tts' ? voice : undefined,
+              audioUrl: url,
+              audioSize: audioBytes.length,
+            },
+            audioBytes
+          );
           setHistory(newHistory);
         };
 
