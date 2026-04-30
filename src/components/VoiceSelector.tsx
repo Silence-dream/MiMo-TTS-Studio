@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Select, Input, Tag } from 'antd';
 import { TTSModel, BuiltInVoice, AudioFormat } from '@/types/tts';
 import {
@@ -76,22 +76,65 @@ export default function VoiceSelector({
 }: VoiceSelectorProps) {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [mostUsed, setMostUsed] = useState<string[]>([]);
+  // O(1) 查询代替每次渲染的 includes 线性扫描
+  const favoritesSet = useMemo(() => new Set(favorites), [favorites]);
 
   useEffect(() => {
     setFavorites(getFavoriteVoices());
     setMostUsed(getMostUsedVoices());
   }, []);
 
-  const handleVoiceSelect = (voiceId: BuiltInVoice) => {
-    onVoiceChange(voiceId);
-    recordVoiceUsage(voiceId);
-  };
+  const handleVoiceSelect = useCallback(
+    (voiceId: BuiltInVoice) => {
+      onVoiceChange(voiceId);
+      recordVoiceUsage(voiceId);
+      // 切换后立即刷新常用音色，避免重载才生效
+      setMostUsed(getMostUsedVoices());
+    },
+    [onVoiceChange]
+  );
 
-  const handleToggleFavorite = (voiceId: string) => {
+  const handleToggleFavorite = useCallback((voiceId: string) => {
     const { favorites: newFavorites } = toggleFavoriteVoice(voiceId);
     setFavorites(newFavorites);
     setMostUsed(getMostUsedVoices());
-  };
+  }, []);
+
+  // 通过 data-voice-id 委托事件，避免在 builtInVoices.map 中为每张卡创建独立闭包
+  const handleCardClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const id = e.currentTarget.dataset.voiceId as BuiltInVoice | undefined;
+      if (id) handleVoiceSelect(id);
+    },
+    [handleVoiceSelect]
+  );
+
+  const handleCardKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        const id = e.currentTarget.dataset.voiceId as BuiltInVoice | undefined;
+        if (id) handleVoiceSelect(id);
+      }
+    },
+    [handleVoiceSelect]
+  );
+
+  const handleFavoriteClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      const id = e.currentTarget.dataset.voiceId;
+      if (id) handleToggleFavorite(id);
+    },
+    [handleToggleFavorite]
+  );
+
+  const handleTagClick = useCallback(
+    (e: React.MouseEvent<HTMLElement>) => {
+      const id = e.currentTarget.dataset.voiceId as BuiltInVoice | undefined;
+      if (id) handleVoiceSelect(id);
+    },
+    [handleVoiceSelect]
+  );
 
   // 内置音色模式
   if (model === 'mimo-v2.5-tts') {
@@ -112,7 +155,8 @@ export default function VoiceSelector({
                     key={voiceId}
                     className="cursor-pointer"
                     color={voice === voiceId ? 'processing' : undefined}
-                    onClick={() => handleVoiceSelect(v.id)}
+                    data-voice-id={v.id}
+                    onClick={handleTagClick}
                   >
                     {v.name}
                   </Tag>
@@ -137,7 +181,8 @@ export default function VoiceSelector({
                     key={voiceId}
                     className="cursor-pointer"
                     color={voice === voiceId ? 'processing' : undefined}
-                    onClick={() => handleVoiceSelect(v.id)}
+                    data-voice-id={v.id}
+                    onClick={handleTagClick}
                   >
                     ❤️ {v.name}
                   </Tag>
@@ -163,10 +208,9 @@ export default function VoiceSelector({
                 }}
                 role="button"
                 tabIndex={0}
-                onClick={() => handleVoiceSelect(v.id)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') handleVoiceSelect(v.id);
-                }}
+                data-voice-id={v.id}
+                onClick={handleCardClick}
+                onKeyDown={handleCardKeyDown}
               >
                 <div className="flex-1">
                   <div className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>
@@ -179,19 +223,15 @@ export default function VoiceSelector({
                 <button
                   className="w-6 h-6 rounded-full flex items-center justify-center text-xs cursor-pointer transition-all"
                   style={{
-                    background: favorites.includes(v.id)
-                      ? 'rgba(248, 113, 113, 0.2)'
-                      : 'transparent',
-                    color: favorites.includes(v.id) ? 'var(--error)' : 'var(--muted)',
+                    background: favoritesSet.has(v.id) ? 'rgba(248, 113, 113, 0.2)' : 'transparent',
+                    color: favoritesSet.has(v.id) ? 'var(--error)' : 'var(--muted)',
                     border: 'none',
                   }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleToggleFavorite(v.id);
-                  }}
-                  title={favorites.includes(v.id) ? '取消收藏' : '收藏'}
+                  data-voice-id={v.id}
+                  onClick={handleFavoriteClick}
+                  title={favoritesSet.has(v.id) ? '取消收藏' : '收藏'}
                 >
-                  {favorites.includes(v.id) ? '❤️' : '🤍'}
+                  {favoritesSet.has(v.id) ? '❤️' : '🤍'}
                 </button>
               </div>
             ))}
