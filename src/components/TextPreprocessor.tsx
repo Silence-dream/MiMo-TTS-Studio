@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Button, Collapse, Space } from 'antd';
 
 interface TextPreprocessorProps {
@@ -48,17 +49,14 @@ export default function TextPreprocessor({ text, onTextChange }: TextPreprocesso
     onTextChange(processed);
   };
 
-  // 统计信息
-  const getStats = () => {
+  // 长文本下避免每次渲染都重新跑正则与 split
+  const stats = useMemo(() => {
     const chars = text.length;
     const chineseChars = (text.match(/[一-龥]/g) || []).length;
     const words = text.split(/\s+/).filter((w) => w.length > 0).length;
     const lines = text.split('\n').filter((l) => l.trim().length > 0).length;
-
     return { chars, chineseChars, words, lines };
-  };
-
-  const stats = getStats();
+  }, [text]);
 
   const collapseContent = (
     <div>
