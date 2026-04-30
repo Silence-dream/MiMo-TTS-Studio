@@ -76,7 +76,8 @@ export default function ApiKeyCard({ onApiKeyChange, onApiEndpointChange }: ApiK
             value={apiKey}
             onChange={(e) => handleKeyChange(e.target.value)}
             placeholder="请输入你的 MiMo API Key"
-            iconRender={(visible) => (visible ? <EyeOutlined /> : <EyeInvisibleOutlined />)}
+            // visible=true 表示密码已显示，按钮该显示"闭眼"以提示点击隐藏
+            iconRender={(visible) => (visible ? <EyeInvisibleOutlined /> : <EyeOutlined />)}
           />
           <div className="text-xs" style={{ color: 'var(--muted)' }}>
             前往{' '}
