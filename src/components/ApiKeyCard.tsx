@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Input } from 'antd';
 import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 import { getApiKey, setApiKey, getApiEndpoint, setApiEndpoint } from '@/lib/storage';
 
 const DEFAULT_ENDPOINT = 'https://api.xiaomimimo.com/v1/chat/completions';
+const PERSIST_DEBOUNCE_MS = 300;
 
 interface ApiKeyCardProps {
   onApiKeyChange: (apiKey: string) => void;
@@ -15,6 +16,9 @@ interface ApiKeyCardProps {
 export default function ApiKeyCard({ onApiKeyChange, onApiEndpointChange }: ApiKeyCardProps) {
   const [apiKey, setApiKeyState] = useState('');
   const [apiEndpoint, setApiEndpointState] = useState('');
+  // 持久化定时器（按字段独立），避免每次按键都同步写 localStorage
+  const keyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const endpointTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const savedKey = getApiKey();
@@ -29,17 +33,33 @@ export default function ApiKeyCard({ onApiKeyChange, onApiEndpointChange }: ApiK
     }
   }, [onApiKeyChange, onApiEndpointChange]);
 
-  const handleKeyChange = (value: string) => {
-    setApiKeyState(value);
-    setApiKey(value);
-    onApiKeyChange(value);
-  };
+  // 卸载时把待写入立即落盘，防止丢失
+  useEffect(() => {
+    return () => {
+      if (keyTimerRef.current) clearTimeout(keyTimerRef.current);
+      if (endpointTimerRef.current) clearTimeout(endpointTimerRef.current);
+    };
+  }, []);
 
-  const handleEndpointChange = (value: string) => {
-    setApiEndpointState(value);
-    setApiEndpoint(value);
-    onApiEndpointChange(value);
-  };
+  const handleKeyChange = useCallback(
+    (value: string) => {
+      setApiKeyState(value);
+      onApiKeyChange(value);
+      if (keyTimerRef.current) clearTimeout(keyTimerRef.current);
+      keyTimerRef.current = setTimeout(() => setApiKey(value), PERSIST_DEBOUNCE_MS);
+    },
+    [onApiKeyChange]
+  );
+
+  const handleEndpointChange = useCallback(
+    (value: string) => {
+      setApiEndpointState(value);
+      onApiEndpointChange(value);
+      if (endpointTimerRef.current) clearTimeout(endpointTimerRef.current);
+      endpointTimerRef.current = setTimeout(() => setApiEndpoint(value), PERSIST_DEBOUNCE_MS);
+    },
+    [onApiEndpointChange]
+  );
 
   return (
     <div className="card">
