@@ -20,18 +20,24 @@ export default function ApiKeyCard({ onApiKeyChange, onApiEndpointChange }: ApiK
   const keyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const endpointTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // 持有最新回调以避免初始化 effect 依赖父级回调引用稳定性
+  const onApiKeyChangeRef = useRef(onApiKeyChange);
+  const onApiEndpointChangeRef = useRef(onApiEndpointChange);
+  onApiKeyChangeRef.current = onApiKeyChange;
+  onApiEndpointChangeRef.current = onApiEndpointChange;
+
   useEffect(() => {
     const savedKey = getApiKey();
     if (savedKey) {
       setApiKeyState(savedKey);
-      onApiKeyChange(savedKey);
+      onApiKeyChangeRef.current(savedKey);
     }
     const savedEndpoint = getApiEndpoint();
     if (savedEndpoint) {
       setApiEndpointState(savedEndpoint);
-      onApiEndpointChange(savedEndpoint);
+      onApiEndpointChangeRef.current(savedEndpoint);
     }
-  }, [onApiKeyChange, onApiEndpointChange]);
+  }, []);
 
   // 卸载时把待写入立即落盘，防止丢失
   useEffect(() => {
