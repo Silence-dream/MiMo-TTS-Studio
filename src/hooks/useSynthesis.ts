@@ -289,7 +289,8 @@ export function useSynthesis() {
           };
 
           let audioBytes: Uint8Array;
-          if (format === 'pcm16') {
+          // 走哪条 API 也必须读快照，避免与 params.format 不一致
+          if (snapshotFormat === 'pcm16') {
             audioBytes = await synthesizeStreaming(params);
           } else {
             audioBytes = await synthesizeNonStreaming(params);
