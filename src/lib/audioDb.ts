@@ -52,6 +52,20 @@ export async function deleteAudio(id: string): Promise<void> {
   });
 }
 
+export async function deleteAudios(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    for (const id of ids) {
+      store.delete(id);
+    }
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
 export async function clearAllAudio(): Promise<void> {
   const db = await openDb();
   return new Promise((resolve, reject) => {

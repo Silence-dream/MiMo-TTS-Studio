@@ -1,5 +1,5 @@
 import { SynthesisHistory } from '@/types/tts';
-import { saveAudio, deleteAudio, clearAllAudio } from './audioDb';
+import { saveAudio, deleteAudios, clearAllAudio } from './audioDb';
 
 const API_KEY_STORAGE_KEY = 'mimo_api_key';
 const API_ENDPOINT_STORAGE_KEY = 'mimo_api_endpoint';
@@ -85,8 +85,8 @@ export async function addHistory(
       if (item.audioUrl.startsWith('blob:')) {
         URL.revokeObjectURL(item.audioUrl);
       }
-      await deleteAudio(item.id);
     }
+    await deleteAudios(removed.map((item) => item.id));
   }
 
   saveHistory(history);
@@ -132,8 +132,8 @@ export async function deleteHistories(ids: string[]): Promise<SynthesisHistory[]
     }
   }
 
-  // 从 IndexedDB 批量删除音频数据
-  await Promise.all(ids.map((id) => deleteAudio(id)));
+  // 从 IndexedDB 批量删除音频数据（单个事务）
+  await deleteAudios(ids);
 
   const filtered = history.filter((item) => !idSet.has(item.id));
   saveHistory(filtered);
