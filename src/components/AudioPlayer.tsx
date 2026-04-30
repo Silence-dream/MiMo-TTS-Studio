@@ -4,6 +4,7 @@ import { useRef, useEffect, useState, useCallback } from 'react';
 import { Button } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
 import { formatFileSize } from '@/lib/audio';
+import { glassCardStyle } from '@/lib/styles';
 
 interface AudioPlayerProps {
   audioUrl: string | null;
@@ -134,11 +135,7 @@ export default function AudioPlayer({ audioUrl, audioSize }: AudioPlayerProps) {
     <div
       className="rounded-xl p-5"
       style={{
-        background: 'var(--card)',
-        backdropFilter: 'blur(16px) saturate(170%)',
-        WebkitBackdropFilter: 'blur(16px) saturate(170%)',
-        border: '1px solid var(--card-border)',
-        boxShadow: 'var(--shadow-card)',
+        ...glassCardStyle,
         marginTop: '10px',
         marginBottom: '10px',
       }}

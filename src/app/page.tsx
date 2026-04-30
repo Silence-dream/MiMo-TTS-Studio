@@ -18,6 +18,7 @@ import ThemeToggle from '@/components/ThemeToggle';
 import KeyboardShortcuts from '@/components/KeyboardShortcuts';
 import OnboardingGuide from '@/components/OnboardingGuide';
 import { useSynthesis } from '@/hooks/useSynthesis';
+import { iconBadgeStyle, glassCardStyle } from '@/lib/styles';
 
 export default function Home() {
   const [apiKey, setApiKey] = useState('');
@@ -90,15 +91,11 @@ export default function Home() {
       <div
         className="main-container"
         style={{
+          ...glassCardStyle,
           maxWidth: '900px',
           margin: '0 auto',
           padding: '40px 24px',
-          background: 'var(--card)',
-          backdropFilter: 'blur(16px) saturate(170%)',
-          WebkitBackdropFilter: 'blur(16px) saturate(170%)',
           borderRadius: '24px',
-          border: '1px solid var(--card-border)',
-          boxShadow: 'var(--shadow-card)',
           marginTop: '20px',
           marginBottom: '20px',
           position: 'relative',
@@ -132,7 +129,7 @@ export default function Home() {
           <div className="flex items-center gap-3 mb-5">
             <span
               className="w-8 h-8 rounded-lg flex items-center justify-center text-base"
-              style={{ background: 'var(--accent-glow)', boxShadow: 'var(--glow-purple-sm)' }}
+              style={iconBadgeStyle}
             >
               🤖
             </span>
