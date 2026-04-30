@@ -267,17 +267,28 @@ export function useSynthesis() {
       const snapshotVoice = voice;
       const snapshotFormat = format;
 
+      // 复用全局 abortControllerRef，让 handleCancel 同时支持取消单次/批量
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
       setIsGenerating(true);
       setStatus('loading');
       setStatusMessage(`批量合成中 (0/${texts.length})...`);
       const startTime = Date.now();
 
+      // 提到 try 外层以便 catch 块可读取已完成数
+      let completedCount = 0;
+
       try {
         const results: { text: string; audioUrl: string; audioSize: number }[] = [];
-        let completedCount = 0;
         const CONCURRENCY = 3;
 
         const synthesizeOne = async (text: string, index: number) => {
+          // 已取消则跳过尚未启动的任务
+          if (controller.signal.aborted) {
+            throw new DOMException('Aborted', 'AbortError');
+          }
+
           const messages = [{ role: 'assistant' as const, content: text }];
           const params = {
             apiKey,
@@ -286,6 +297,7 @@ export function useSynthesis() {
             messages,
             format: snapshotFormat,
             voice: snapshotModel === 'mimo-v2.5-tts' ? snapshotVoice : undefined,
+            signal: controller.signal,
           };
 
           let audioBytes: Uint8Array;
@@ -319,6 +331,7 @@ export function useSynthesis() {
         const executing = new Set<Promise<void>>();
 
         for (const task of queue) {
+          if (controller.signal.aborted) break;
           const p = task().then(() => {
             executing.delete(p);
           });
@@ -334,12 +347,19 @@ export function useSynthesis() {
         setStatusMessage(`批量合成完成，共 ${texts.length} 条，耗时 ${elapsed}s`);
         toast.success(`批量合成完成，共 ${texts.length} 条`);
       } catch (error) {
-        console.error('批量合成失败:', error);
-        const errorMsg = error instanceof Error ? error.message : '未知错误';
-        setStatus('error');
-        setStatusMessage(`批量合成失败: ${errorMsg}`);
-        toast.error(`批量合成失败: ${errorMsg}`);
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          setStatus('idle');
+          setStatusMessage(`批量合成已取消（已完成 ${completedCount}/${texts.length}）`);
+          toast.warning('批量合成已取消');
+        } else {
+          console.error('批量合成失败:', error);
+          const errorMsg = error instanceof Error ? error.message : '未知错误';
+          setStatus('error');
+          setStatusMessage(`批量合成失败: ${errorMsg}`);
+          toast.error(`批量合成失败: ${errorMsg}`);
+        }
       } finally {
+        abortControllerRef.current = null;
         setIsGenerating(false);
       }
     },
