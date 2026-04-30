@@ -314,7 +314,8 @@ export function useSynthesis() {
           completedCount++;
           setStatusMessage(`批量合成中 (${completedCount}/${texts.length})...`);
 
-          const newHistory = await addHistory(
+          // 仅写入存储，不在循环内 setHistory，避免逐条触发 React 重渲染
+          await addHistory(
             {
               text: text.substring(0, 100),
               model: snapshotModel,
@@ -324,7 +325,6 @@ export function useSynthesis() {
             },
             audioBytes
           );
-          setHistory(newHistory);
         };
 
         const queue = texts.map((text, i) => () => synthesizeOne(text, i));
@@ -342,12 +342,17 @@ export function useSynthesis() {
         }
         await Promise.all(executing);
 
+        // 全部任务完成后统一刷新一次 UI
+        setHistory(getHistory());
+
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
         setStatus('success');
         setStatusMessage(`批量合成完成，共 ${texts.length} 条，耗时 ${elapsed}s`);
         toast.success(`批量合成完成，共 ${texts.length} 条`);
       } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') {
+          // 已完成的条目可能已落库，需要刷新一次 UI
+          setHistory(getHistory());
           setStatus('idle');
           setStatusMessage(`批量合成已取消（已完成 ${completedCount}/${texts.length}）`);
           toast.warning('批量合成已取消');
