@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { TTSModel } from '@/types/tts';
 import ApiKeyCard from '@/components/ApiKeyCard';
@@ -68,20 +68,22 @@ export default function Home() {
     [handleBatchSynthesize, apiKey, apiEndpoint]
   );
 
-  // 键盘快捷键
+  // 键盘快捷键：监听器只注册一次，通过 ref 持有最新闭包
+  const shortcutRef = useRef({ isGenerating, onSynthesize });
+  shortcutRef.current = { isGenerating, onSynthesize };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
-        if (!isGenerating) {
-          onSynthesize();
-        }
+        const { isGenerating: gen, onSynthesize: trigger } = shortcutRef.current;
+        if (!gen) trigger();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isGenerating, onSynthesize]);
+  }, []);
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--background)' }}>
