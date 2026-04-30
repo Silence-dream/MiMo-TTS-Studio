@@ -262,6 +262,11 @@ export function useSynthesis() {
         return;
       }
 
+      // 启动时快照当前配置，避免批量过程中用户切换导致不一致
+      const snapshotModel = model;
+      const snapshotVoice = voice;
+      const snapshotFormat = format;
+
       setIsGenerating(true);
       setStatus('loading');
       setStatusMessage(`批量合成中 (0/${texts.length})...`);
@@ -277,10 +282,10 @@ export function useSynthesis() {
           const params = {
             apiKey,
             apiEndpoint: apiEndpoint || undefined,
-            model,
+            model: snapshotModel,
             messages,
-            format,
-            voice: model === 'mimo-v2.5-tts' ? voice : undefined,
+            format: snapshotFormat,
+            voice: snapshotModel === 'mimo-v2.5-tts' ? snapshotVoice : undefined,
           };
 
           let audioBytes: Uint8Array;
@@ -299,8 +304,8 @@ export function useSynthesis() {
           const newHistory = await addHistory(
             {
               text: text.substring(0, 100),
-              model,
-              voice: model === 'mimo-v2.5-tts' ? voice : undefined,
+              model: snapshotModel,
+              voice: snapshotModel === 'mimo-v2.5-tts' ? snapshotVoice : undefined,
               audioUrl: url,
               audioSize: audioBytes.length,
             },
