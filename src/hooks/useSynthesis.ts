@@ -280,10 +280,9 @@ export function useSynthesis() {
       let completedCount = 0;
 
       try {
-        const results: { text: string; audioUrl: string; audioSize: number }[] = [];
         const CONCURRENCY = 3;
 
-        const synthesizeOne = async (text: string, index: number) => {
+        const synthesizeOne = async (text: string) => {
           // 已取消则跳过尚未启动的任务
           if (controller.signal.aborted) {
             throw new DOMException('Aborted', 'AbortError');
@@ -309,7 +308,6 @@ export function useSynthesis() {
           }
 
           const url = createAudioUrl(audioBytes);
-          results[index] = { text, audioUrl: url, audioSize: audioBytes.length };
 
           completedCount++;
           setStatusMessage(`批量合成中 (${completedCount}/${texts.length})...`);
@@ -327,7 +325,7 @@ export function useSynthesis() {
           );
         };
 
-        const queue = texts.map((text, i) => () => synthesizeOne(text, i));
+        const queue = texts.map((text) => () => synthesizeOne(text));
         const executing = new Set<Promise<void>>();
 
         for (const task of queue) {
