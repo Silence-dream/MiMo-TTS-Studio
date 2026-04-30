@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, ReactNode } from 'react';
+import { createContext, useContext, useMemo, ReactNode } from 'react';
 import { App } from 'antd';
 import type { MessageInstance } from 'antd/es/message/interface';
 
@@ -26,14 +26,19 @@ export function useToast() {
 function ToastProviderInner({ children }: { children: ReactNode }) {
   const { message } = App.useApp();
 
-  const toast = {
-    success: (msg: string) => message.success(msg),
-    error: (msg: string) => message.error(msg),
-    warning: (msg: string) => message.warning(msg),
-    info: (msg: string) => message.info(msg),
-  };
+  const toast = useMemo(
+    () => ({
+      success: (msg: string) => message.success(msg),
+      error: (msg: string) => message.error(msg),
+      warning: (msg: string) => message.warning(msg),
+      info: (msg: string) => message.info(msg),
+    }),
+    [message]
+  );
 
-  return <ToastContext.Provider value={{ toast }}>{children}</ToastContext.Provider>;
+  const contextValue = useMemo(() => ({ toast }), [toast]);
+
+  return <ToastContext.Provider value={contextValue}>{children}</ToastContext.Provider>;
 }
 
 export function ToastProvider({ children }: { children: ReactNode }) {
