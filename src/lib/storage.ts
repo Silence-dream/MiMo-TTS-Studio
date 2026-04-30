@@ -248,7 +248,7 @@ export function getVoiceUsage(): VoiceUsage[] {
  */
 export function getMostUsedVoices(limit: number = 5): string[] {
   const usage = getVoiceUsage();
-  return usage
+  return [...usage]
     .sort((a, b) => b.count - a.count)
     .slice(0, limit)
     .map((u) => u.voiceId);
