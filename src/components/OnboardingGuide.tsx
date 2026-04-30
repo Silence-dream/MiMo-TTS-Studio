@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Modal, Steps, Button, Space } from 'antd';
 
 interface Step {
@@ -51,24 +51,30 @@ export default function OnboardingGuide() {
     }
   }, []);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsVisible(false);
     localStorage.setItem('has_seen_guide', 'true');
-  };
+  }, []);
 
-  const handleNext = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      handleClose();
-    }
-  };
+  const handleNext = useCallback(() => {
+    setCurrentStep((prev) => {
+      if (prev < steps.length - 1) return prev + 1;
+      // 最后一步保持原值，关闭逻辑放到 effect 中执行，避免 updater 产生副作用
+      return prev;
+    });
+  }, []);
 
-  const handlePrev = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
+  // 在最后一步再次点击"下一步"时关闭引导
+  // 通过监听 isVisible & currentStep 在事件之外触发，避免 setState updater 不纯
+  const handleLastStepClick = useCallback(() => {
+    handleClose();
+  }, [handleClose]);
+
+  const handlePrev = useCallback(() => {
+    setCurrentStep((prev) => (prev > 0 ? prev - 1 : prev));
+  }, []);
+
+  const isLastStep = currentStep === steps.length - 1;
 
   const step = steps[currentStep];
 
@@ -85,9 +91,7 @@ export default function OnboardingGuide() {
         current={currentStep}
         size="small"
         className="mb-6 px-6"
-        items={steps.map((s, i) => ({
-          title: '',
-        }))}
+        items={steps.map(() => ({ title: '' }))}
       />
 
       <div className="text-center mb-8 px-6">
@@ -106,11 +110,15 @@ export default function OnboardingGuide() {
                 上一步
               </Button>
             )}
-            <Button type="primary" className="flex-1" onClick={handleNext}>
-              {currentStep === steps.length - 1 ? '开始使用' : '下一步'}
+            <Button
+              type="primary"
+              className="flex-1"
+              onClick={isLastStep ? handleLastStepClick : handleNext}
+            >
+              {isLastStep ? '开始使用' : '下一步'}
             </Button>
           </div>
-          {currentStep < steps.length - 1 && (
+          {!isLastStep && (
             <Button type="text" block onClick={handleClose} style={{ color: 'var(--muted)' }}>
               跳过引导
             </Button>
