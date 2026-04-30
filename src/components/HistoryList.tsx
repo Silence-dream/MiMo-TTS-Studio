@@ -50,10 +50,11 @@ export default function HistoryList({
     return groups;
   }, [history]);
 
-  // 获取所有日期
-  const dates = Object.keys(groupedHistory).sort((a, b) => {
-    return new Date(b).getTime() - new Date(a).getTime();
-  });
+  // 获取所有日期（按倒序排序，缓存以避免每次渲染重排）
+  const dates = useMemo(
+    () => Object.keys(groupedHistory).sort((a, b) => new Date(b).getTime() - new Date(a).getTime()),
+    [groupedHistory]
+  );
 
   // 过滤历史记录（复用 groupedHistory 做日期过滤）
   const filteredHistory = useMemo(() => {
