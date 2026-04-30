@@ -7,7 +7,11 @@ const rateLimitMap = new Map<string, number[]>();
 const RATE_LIMIT = 30;
 const RATE_WINDOW_MS = 60_000;
 
-function checkRateLimit(ip: string): boolean {
+function checkRateLimit(ip: string | null): boolean {
+  // 无法识别来源 IP（多见于本地/私有部署）时跳过限制，
+  // 避免所有匿名请求共享同一额度被相互拖累
+  if (!ip) return true;
+
   const now = Date.now();
   const timestamps = rateLimitMap.get(ip) || [];
   const recent = timestamps.filter((t) => now - t < RATE_WINDOW_MS);
@@ -26,11 +30,18 @@ function checkRateLimit(ip: string): boolean {
   return true;
 }
 
+function resolveClientIp(request: NextRequest): string | null {
+  const forwarded = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+  if (forwarded) return forwarded;
+  const realIp = request.headers.get('x-real-ip')?.trim();
+  if (realIp) return realIp;
+  return null;
+}
+
 export async function POST(request: NextRequest) {
   try {
-    // 速率限制
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-    if (!checkRateLimit(ip)) {
+    // 速率限制（无法识别 IP 时不限速，避免私有部署下所有请求被同一 'unknown' 配额限制）
+    if (!checkRateLimit(resolveClientIp(request))) {
       return NextResponse.json({ error: '请求过于频繁，请稍后再试' }, { status: 429 });
     }
 
