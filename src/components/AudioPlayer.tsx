@@ -55,30 +55,26 @@ export default function AudioPlayer({ audioUrl, audioSize }: AudioPlayerProps) {
 
     const bufferLength = analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
+    const width = canvas.width;
+    const height = canvas.height;
+
+    // 预计算渐变，避免每帧每条柱都创建新渐变对象
+    const barGradient = ctx.createLinearGradient(0, 0, 0, height);
+    barGradient.addColorStop(0, '#8b5cf6');
+    barGradient.addColorStop(1, 'rgba(139, 92, 246, 0.3)');
 
     const draw = () => {
       animationRef.current = requestAnimationFrame(draw);
 
       analyser.getByteFrequencyData(dataArray);
 
-      const width = canvas.width;
-      const height = canvas.height;
-
       ctx.clearRect(0, 0, width, height);
-
-      const gradient = ctx.createLinearGradient(0, 0, 0, height);
-      gradient.addColorStop(0, 'rgba(139, 92, 246, 0.3)');
-      gradient.addColorStop(1, 'rgba(139, 92, 246, 0.05)');
 
       const barWidth = (width / bufferLength) * 2.5;
       let x = 0;
 
       for (let i = 0; i < bufferLength; i++) {
         const barHeight = (dataArray[i] / 255) * height;
-
-        const barGradient = ctx.createLinearGradient(0, height - barHeight, 0, height);
-        barGradient.addColorStop(0, '#8b5cf6');
-        barGradient.addColorStop(1, 'rgba(139, 92, 246, 0.3)');
 
         ctx.fillStyle = barGradient;
         ctx.fillRect(x, height - barHeight, barWidth, barHeight);
