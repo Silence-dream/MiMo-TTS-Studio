@@ -15,7 +15,16 @@ import {
   getFileMimeType,
 } from '@/lib/api';
 import { createAudioUrl, revokeAudioUrl } from '@/lib/audio';
-import { getHistory, addHistory, deleteHistory, deleteHistories } from '@/lib/storage';
+import {
+  getHistory,
+  addHistory,
+  deleteHistory,
+  deleteHistories,
+  getStoredVoice,
+  setStoredVoice,
+  getStoredFormat,
+  setStoredFormat,
+} from '@/lib/storage';
 import { getAudio } from '@/lib/audioDb';
 import { useToast } from '@/components/Toast';
 
@@ -23,8 +32,19 @@ export function useSynthesis() {
   const toast = useToast();
 
   const [model, setModel] = useState<TTSModel>('mimo-v2.5-tts');
-  const [voice, setVoice] = useState<BuiltInVoice>('mimo_default');
-  const [format, setFormat] = useState<AudioFormat>('wav');
+  // 初始值与 SSR 保持一致；挂载后从 localStorage 读取覆盖（避免水合不一致）
+  const [voice, setVoiceState] = useState<BuiltInVoice>('mimo_default');
+  const [format, setFormatState] = useState<AudioFormat>('wav');
+
+  const setVoice = useCallback((v: BuiltInVoice) => {
+    setVoiceState(v);
+    setStoredVoice(v);
+  }, []);
+
+  const setFormat = useCallback((f: AudioFormat) => {
+    setFormatState(f);
+    setStoredFormat(f);
+  }, []);
   const [voiceDesignPrompt, setVoiceDesignPrompt] = useState('');
   const [cloneFile, setCloneFile] = useState<File | null>(null);
   const [cloneStylePrompt, setCloneStylePrompt] = useState('');
@@ -41,6 +61,11 @@ export function useSynthesis() {
 
   useEffect(() => {
     setHistory(getHistory());
+    // 挂载后再读取本地偏好，避免与 SSR 输出不一致
+    const v = getStoredVoice();
+    if (v) setVoiceState(v);
+    const f = getStoredFormat();
+    if (f) setFormatState(f);
   }, []);
 
   useEffect(() => {

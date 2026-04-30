@@ -3,7 +3,17 @@
 import { useState } from 'react';
 import { Button, Collapse, Alert, Space } from 'antd';
 import { ExportOutlined, ImportOutlined, ReloadOutlined } from '@ant-design/icons';
-import { getApiKey, getApiEndpoint, setApiKey, setApiEndpoint } from '@/lib/storage';
+import {
+  getApiKey,
+  getApiEndpoint,
+  setApiKey,
+  setApiEndpoint,
+  getStoredVoice,
+  setStoredVoice,
+  getStoredFormat,
+  setStoredFormat,
+} from '@/lib/storage';
+import { BuiltInVoice, AudioFormat } from '@/types/tts';
 
 interface Settings {
   apiKey: string;
@@ -23,8 +33,8 @@ export default function SettingsManager() {
       apiKey: getApiKey(),
       apiEndpoint: getApiEndpoint(),
       theme: localStorage.getItem('theme') || 'system',
-      format: localStorage.getItem('format') || 'wav',
-      voice: localStorage.getItem('voice') || 'mimo_default',
+      format: getStoredFormat() || 'wav',
+      voice: getStoredVoice() || 'mimo_default',
       exportedAt: new Date().toISOString(),
     };
 
@@ -65,10 +75,11 @@ export default function SettingsManager() {
           localStorage.setItem('theme', settings.theme);
         }
         if (settings.format) {
-          localStorage.setItem('format', settings.format);
+          // 写入即可：getStoredFormat 会在读取时丢弃非法值
+          setStoredFormat(settings.format as AudioFormat);
         }
         if (settings.voice) {
-          localStorage.setItem('voice', settings.voice);
+          setStoredVoice(settings.voice as BuiltInVoice);
         }
 
         setImportStatus('设置已导入，刷新页面生效');
@@ -85,8 +96,8 @@ export default function SettingsManager() {
   const handleReset = () => {
     if (confirm('确定要重置所有设置吗？这将清除所有保存的配置。')) {
       localStorage.removeItem('theme');
-      localStorage.removeItem('format');
-      localStorage.removeItem('voice');
+      localStorage.removeItem('mimo_format');
+      localStorage.removeItem('mimo_voice');
 
       setImportStatus('设置已重置，刷新页面生效');
       setTimeout(() => setImportStatus(null), 5000);

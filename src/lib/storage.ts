@@ -1,4 +1,4 @@
-import { SynthesisHistory } from '@/types/tts';
+import { SynthesisHistory, BuiltInVoice, AudioFormat } from '@/types/tts';
 import { saveAudio, deleteAudios, clearAllAudio } from './audioDb';
 
 const API_KEY_STORAGE_KEY = 'mimo_api_key';
@@ -6,7 +6,23 @@ const API_ENDPOINT_STORAGE_KEY = 'mimo_api_endpoint';
 const HISTORY_STORAGE_KEY = 'mimo_tts_history';
 const FAVORITE_VOICES_KEY = 'mimo_favorite_voices';
 const VOICE_USAGE_KEY = 'mimo_voice_usage';
+const VOICE_KEY = 'mimo_voice';
+const FORMAT_KEY = 'mimo_format';
 const MAX_HISTORY_ITEMS = 20;
+
+const VALID_VOICES: BuiltInVoice[] = [
+  'mimo_default',
+  '冰糖',
+  '茉莉',
+  '苏打',
+  '白桦',
+  'Mia',
+  'Chloe',
+  'Milo',
+  'Dean',
+];
+
+const VALID_FORMATS: AudioFormat[] = ['wav', 'pcm16'];
 
 /**
  * 获取存储的 API Key
@@ -38,6 +54,34 @@ export function getApiEndpoint(): string {
 export function setApiEndpoint(endpoint: string): void {
   if (typeof window === 'undefined') return;
   localStorage.setItem(API_ENDPOINT_STORAGE_KEY, endpoint);
+}
+
+/**
+ * 获取存储的音色（无效或未存储时返回 null，由调用方决定默认）
+ */
+export function getStoredVoice(): BuiltInVoice | null {
+  if (typeof window === 'undefined') return null;
+  const v = localStorage.getItem(VOICE_KEY);
+  return v && (VALID_VOICES as string[]).includes(v) ? (v as BuiltInVoice) : null;
+}
+
+export function setStoredVoice(voice: BuiltInVoice): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(VOICE_KEY, voice);
+}
+
+/**
+ * 获取存储的输出格式（无效或未存储时返回 null）
+ */
+export function getStoredFormat(): AudioFormat | null {
+  if (typeof window === 'undefined') return null;
+  const f = localStorage.getItem(FORMAT_KEY);
+  return f && (VALID_FORMATS as string[]).includes(f) ? (f as AudioFormat) : null;
+}
+
+export function setStoredFormat(format: AudioFormat): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(FORMAT_KEY, format);
 }
 
 /**
