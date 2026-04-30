@@ -169,9 +169,13 @@ export default function HistoryList({
     }
   };
 
-  // 导出为 JSON
+  // 导出为 JSON：剥离 db:// 内部引用，避免误导用户音频已被打包
   const handleExportJSON = () => {
-    const data = JSON.stringify(history, null, 2);
+    const exportable = history.map((item) => ({
+      ...item,
+      audioUrl: item.audioUrl.startsWith('db://') ? '<stored locally>' : item.audioUrl,
+    }));
+    const data = JSON.stringify(exportable, null, 2);
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
