@@ -2,15 +2,24 @@ const DB_NAME = 'mimo-tts-audio';
 const STORE_NAME = 'audio-data';
 const DB_VERSION = 1;
 
+// 缓存数据库连接，避免每次操作都创建新连接
+let dbPromise: Promise<IDBDatabase> | null = null;
+
 function openDb(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onupgradeneeded = () => {
-      request.result.createObjectStore(STORE_NAME);
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
+  if (!dbPromise) {
+    dbPromise = new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+      request.onupgradeneeded = () => {
+        request.result.createObjectStore(STORE_NAME);
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => {
+        dbPromise = null;
+        reject(request.error);
+      };
+    });
+  }
+  return dbPromise;
 }
 
 export async function saveAudio(id: string, data: Uint8Array): Promise<void> {
