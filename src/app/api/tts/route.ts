@@ -14,6 +14,15 @@ function checkRateLimit(ip: string): boolean {
   if (recent.length >= RATE_LIMIT) return false;
   recent.push(now);
   rateLimitMap.set(ip, recent);
+
+  // Map 过大时清理已过期的 IP 条目，防止内存泄漏
+  if (rateLimitMap.size > 100) {
+    for (const [key, ts] of rateLimitMap) {
+      if (ts.filter((t) => now - t < RATE_WINDOW_MS).length === 0) {
+        rateLimitMap.delete(key);
+      }
+    }
+  }
   return true;
 }
 
