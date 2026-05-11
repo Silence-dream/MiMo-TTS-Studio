@@ -122,7 +122,7 @@ ZIP 打包是合成历史的「批量下载」特性（在 `HistoryList` 中实�
 
 ## 关键约定
 
-- 所有面向用户的文案和代码注释使用**中文 (zh-CN)**
+- 所有面向用户的文案和代码注释使用**中文 (zh-CN)**（PR 模板 checklist 中有此项检查）
 - 组件均为 `'use client'`（纯客户端渲染）
 - 风格标签如 `(开心)` 插入到文本开头；音频标签如 `[深吸一口气]` 可插入文本任意位置
 - 代码格式化使用 Prettier（semi、singleQuote、printWidth: 100、trailingComma: es5、endOfLine: lf），通过 Husky + lint-staged 在 commit 时自动执行
