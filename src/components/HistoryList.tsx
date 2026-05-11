@@ -11,6 +11,7 @@ import {
 import JSZip from 'jszip';
 import { SynthesisHistory } from '@/types/tts';
 import { getAudio } from '@/lib/audioDb';
+import { useToast } from '@/components/Toast';
 
 interface HistoryListProps {
   history: SynthesisHistory[];
@@ -25,6 +26,7 @@ export default function HistoryList({
   onDelete,
   onDeleteBatch,
 }: HistoryListProps) {
+  const toast = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -123,8 +125,10 @@ export default function HistoryList({
       a.download = `tts_${item.id}.wav`;
       a.click();
       URL.revokeObjectURL(url);
+      toast.success('音频已下载');
     } catch (error) {
       console.error('下载失败:', error);
+      toast.error('下载失败');
     }
   };
 
@@ -162,8 +166,10 @@ export default function HistoryList({
       a.download = `tts_audio_${new Date().toISOString().split('T')[0]}.zip`;
       a.click();
       URL.revokeObjectURL(url);
+      toast.success(`已打包下载 ${selectedItems.length} 条音频`);
     } catch (error) {
       console.error('批量下载失败:', error);
+      toast.error('批量下载失败');
     } finally {
       setIsDownloading(false);
     }
@@ -183,6 +189,7 @@ export default function HistoryList({
     a.download = `tts_history_${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
+    toast.success('已导出 JSON');
   };
 
   // 导出为 CSV
@@ -205,6 +212,7 @@ export default function HistoryList({
     a.download = `tts_history_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+    toast.success('已导出 CSV');
   };
 
   // 删除选中项

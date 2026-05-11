@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { Button, Collapse, Space } from 'antd';
+import { useToast } from '@/components/Toast';
 
 interface TextPreprocessorProps {
   text: string;
@@ -9,32 +10,37 @@ interface TextPreprocessorProps {
 }
 
 export default function TextPreprocessor({ text, onTextChange }: TextPreprocessorProps) {
+  const toast = useToast();
+
   // 去除多余空格
-  const removeExtraSpaces = () => {
+  const removeExtraSpaces = useCallback(() => {
     const processed = text
       .replace(/[ \t]+/g, ' ')
       .replace(/\n\s*\n/g, '\n\n')
       .trim();
     onTextChange(processed);
-  };
+    toast.success('已去除多余空格');
+  }, [text, onTextChange, toast]);
 
   // 去除所有换行
-  const removeLineBreaks = () => {
+  const removeLineBreaks = useCallback(() => {
     const processed = text.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
     onTextChange(processed);
-  };
+    toast.success('已去除换行');
+  }, [text, onTextChange, toast]);
 
   // 智能分段（按句号、问号、感叹号分段）
-  const smartSegment = () => {
+  const smartSegment = useCallback(() => {
     const processed = text
       .replace(/([。！？.!?])\s*/g, '$1\n')
       .replace(/\n+/g, '\n')
       .trim();
     onTextChange(processed);
-  };
+    toast.success('已智能分段');
+  }, [text, onTextChange, toast]);
 
   // 添加标点符号
-  const addPunctuation = () => {
+  const addPunctuation = useCallback(() => {
     const lines = text.split('\n');
     const processed = lines
       .map((line) => {
@@ -47,7 +53,8 @@ export default function TextPreprocessor({ text, onTextChange }: TextPreprocesso
       })
       .join('\n');
     onTextChange(processed);
-  };
+    toast.success('已添加标点');
+  }, [text, onTextChange, toast]);
 
   // 长文本下避免每次渲染都重新跑正则与 split
   const stats = useMemo(() => {

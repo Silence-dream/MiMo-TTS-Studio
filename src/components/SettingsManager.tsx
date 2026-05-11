@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Button, Collapse, Alert, Space } from 'antd';
+import { useCallback } from 'react';
+import { Button, Collapse, Space } from 'antd';
 import { ExportOutlined, ImportOutlined, ReloadOutlined } from '@ant-design/icons';
 import {
   getApiKey,
@@ -14,6 +14,7 @@ import {
   setStoredFormat,
 } from '@/lib/storage';
 import { BuiltInVoice, AudioFormat } from '@/types/tts';
+import { useToast } from '@/components/Toast';
 
 interface Settings {
   apiKey: string;
@@ -25,10 +26,10 @@ interface Settings {
 }
 
 export default function SettingsManager() {
-  const [importStatus, setImportStatus] = useState<string | null>(null);
+  const toast = useToast();
 
   // 导出设置
-  const handleExport = () => {
+  const handleExport = useCallback(() => {
     const settings: Settings = {
       apiKey: getApiKey(),
       apiEndpoint: getApiEndpoint(),
@@ -47,62 +48,49 @@ export default function SettingsManager() {
     a.click();
     URL.revokeObjectURL(url);
 
-    setImportStatus('设置已导出');
-    setTimeout(() => setImportStatus(null), 3000);
-  };
+    toast.success('设置已导出');
+  }, [toast]);
 
   // 导入设置
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleImport = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const settings: Settings = JSON.parse(event.target?.result as string);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const settings: Settings = JSON.parse(event.target?.result as string);
 
-        if (!settings.exportedAt) {
-          throw new Error('无效的设置文件');
-        }
+          if (!settings.exportedAt) {
+            throw new Error('无效的设置文件');
+          }
 
-        if (settings.apiKey) {
-          setApiKey(settings.apiKey);
-        }
-        if (settings.apiEndpoint) {
-          setApiEndpoint(settings.apiEndpoint);
-        }
-        if (settings.theme) {
-          localStorage.setItem('theme', settings.theme);
-        }
-        if (settings.format) {
-          // 写入即可：getStoredFormat 会在读取时丢弃非法值
-          setStoredFormat(settings.format as AudioFormat);
-        }
-        if (settings.voice) {
-          setStoredVoice(settings.voice as BuiltInVoice);
-        }
+          if (settings.apiKey) setApiKey(settings.apiKey);
+          if (settings.apiEndpoint) setApiEndpoint(settings.apiEndpoint);
+          if (settings.theme) localStorage.setItem('theme', settings.theme);
+          if (settings.format) setStoredFormat(settings.format as AudioFormat);
+          if (settings.voice) setStoredVoice(settings.voice as BuiltInVoice);
 
-        setImportStatus('设置已导入，刷新页面生效');
-        setTimeout(() => setImportStatus(null), 5000);
-      } catch (error) {
-        setImportStatus('导入失败：无效的设置文件');
-        setTimeout(() => setImportStatus(null), 3000);
-      }
-    };
-    reader.readAsText(file);
-  };
+          toast.success('设置已导入，刷新页面生效');
+        } catch {
+          toast.error('导入失败：无效的设置文件');
+        }
+      };
+      reader.readAsText(file);
+    },
+    [toast]
+  );
 
   // 重置所有设置
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     if (confirm('确定要重置所有设置吗？这将清除所有保存的配置。')) {
       localStorage.removeItem('theme');
       localStorage.removeItem('mimo_format');
       localStorage.removeItem('mimo_voice');
-
-      setImportStatus('设置已重置，刷新页面生效');
-      setTimeout(() => setImportStatus(null), 5000);
+      toast.success('设置已重置，刷新页面生效');
     }
-  };
+  }, [toast]);
 
   const collapseContent = (
     <div>
@@ -122,15 +110,6 @@ export default function SettingsManager() {
           重置设置
         </Button>
       </Space>
-
-      {importStatus && (
-        <Alert
-          message={importStatus}
-          type={importStatus.includes('失败') ? 'error' : 'success'}
-          showIcon
-          className="mt-3"
-        />
-      )}
 
       <div className="mt-3 text-xs" style={{ color: 'var(--muted)' }}>
         提示：导出的设置文件包含 API Key，请妥善保管

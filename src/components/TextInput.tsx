@@ -1,9 +1,10 @@
 'use client';
 
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useCallback } from 'react';
 import { Input, Select, Button } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
 import { TTSModel } from '@/types/tts';
+import { useToast } from '@/components/Toast';
 
 // 示例文本列表
 const EXAMPLE_LINES = [
@@ -48,30 +49,39 @@ export default function TextInput({
   onSynthesize,
   onClear,
 }: TextInputProps) {
+  const toast = useToast();
   const isVoiceDesign = model === 'mimo-v2.5-tts-voicedesign';
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 处理示例选择
-  const handleExampleChange = (value: string) => {
-    const example = EXAMPLE_LINES[Number(value)];
-    onAssistantContentChange(example.text);
-    // 示例已包含风格标签，清空风格指令避免冲突
-    onUserMessageChange('');
-  };
+  const handleExampleChange = useCallback(
+    (value: string) => {
+      const example = EXAMPLE_LINES[Number(value)];
+      onAssistantContentChange(example.text);
+      // 示例已包含风格标签，清空风格指令避免冲突
+      onUserMessageChange('');
+      toast.success(`已填入「${example.label}」示例文本`);
+    },
+    [onAssistantContentChange, onUserMessageChange, toast]
+  );
 
   // 处理 txt 文件上传
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target?.result as string;
-      onAssistantContentChange(text);
-    };
-    reader.readAsText(file);
-    // 重置 input 以支持重复上传同一文件
-    e.target.value = '';
-  };
+  const handleFileUpload = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const text = event.target?.result as string;
+        onAssistantContentChange(text);
+        toast.success(`已导入「${file.name}」`);
+      };
+      reader.readAsText(file);
+      // 重置 input 以支持重复上传同一文件
+      e.target.value = '';
+    },
+    [onAssistantContentChange, toast]
+  );
 
   // 计算字数和预估时长
   const stats = useMemo(() => {

@@ -5,6 +5,7 @@ import { Button, Collapse, Upload, Alert, Space, Spin } from 'antd';
 import { InboxOutlined, DeleteOutlined, LoadingOutlined } from '@ant-design/icons';
 import type { UploadFile } from 'antd';
 import { TTSModel, BuiltInVoice, AudioFormat } from '@/types/tts';
+import { useToast } from '@/components/Toast';
 
 interface BatchSynthesisProps {
   model: TTSModel;
@@ -21,58 +22,64 @@ export default function BatchSynthesis({
   isGenerating,
   onSynthesize,
 }: BatchSynthesisProps) {
+  const toast = useToast();
   const [texts, setTexts] = useState<string[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const processFile = useCallback((file: File) => {
-    setError(null);
+  const processFile = useCallback(
+    (file: File) => {
+      setError(null);
 
-    // 验证文件类型
-    if (!file.name.endsWith('.txt')) {
-      setError('请上传 TXT 格式的文件');
-      return;
-    }
-
-    // 验证文件大小（最大 1MB）
-    if (file.size > 1024 * 1024) {
-      setError('文件大小不能超过 1MB');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const content = e.target?.result as string;
-      const lines = content
-        .split('\n')
-        .map((line) => line.trim())
-        .filter((line) => line.length > 0);
-
-      if (lines.length === 0) {
-        setError('文件中没有有效的文本内容');
+      // 验证文件类型
+      if (!file.name.endsWith('.txt')) {
+        setError('请上传 TXT 格式的文件');
         return;
       }
 
-      if (lines.length > 100) {
-        setError('文件内容不能超过 100 行');
+      // 验证文件大小（最大 1MB）
+      if (file.size > 1024 * 1024) {
+        setError('文件大小不能超过 1MB');
         return;
       }
 
-      setTexts(lines);
-      setFileName(file.name);
-    };
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+        const lines = content
+          .split('\n')
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0);
 
-    reader.onerror = () => {
-      setError('读取文件失败');
-    };
+        if (lines.length === 0) {
+          setError('文件中没有有效的文本内容');
+          return;
+        }
 
-    reader.readAsText(file);
-  }, []);
+        if (lines.length > 100) {
+          setError('文件内容不能超过 100 行');
+          return;
+        }
+
+        setTexts(lines);
+        setFileName(file.name);
+        toast.success(`已加载 ${lines.length} 条文本`);
+      };
+
+      reader.onerror = () => {
+        setError('读取文件失败');
+      };
+
+      reader.readAsText(file);
+    },
+    [toast]
+  );
 
   const handleClear = () => {
     setTexts([]);
     setFileName(null);
     setError(null);
+    toast.info('已清空文本列表');
   };
 
   const handleSynthesize = () => {
