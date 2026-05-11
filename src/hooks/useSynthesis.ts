@@ -291,6 +291,16 @@ export function useSynthesis() {
       const snapshotModel = model;
       const snapshotVoice = voice;
       const snapshotFormat = format;
+      const snapshotCloneFile = cloneFile;
+      const snapshotCloneStylePrompt = cloneStylePrompt;
+
+      // 声音克隆模式：提前将音频文件转为 base64 data URI，避免循环内重复读取
+      let cloneVoiceDataUri: string | undefined;
+      if (snapshotModel === 'mimo-v2.5-tts-voiceclone' && snapshotCloneFile) {
+        const base64 = await fileToBase64(snapshotCloneFile);
+        const mimeType = getFileMimeType(snapshotCloneFile);
+        cloneVoiceDataUri = `data:${mimeType};base64,${base64}`;
+      }
 
       // 复用全局 abortControllerRef，让 handleCancel 同时支持取消单次/批量
       const controller = new AbortController();
@@ -313,14 +323,27 @@ export function useSynthesis() {
             throw new DOMException('Aborted', 'AbortError');
           }
 
-          const messages = [{ role: 'assistant' as const, content: text }];
+          // 声音克隆需要 user 消息（可为空），其他模式仅 assistant
+          const messages =
+            snapshotModel === 'mimo-v2.5-tts-voiceclone'
+              ? [
+                  { role: 'user' as const, content: snapshotCloneStylePrompt.trim() },
+                  { role: 'assistant' as const, content: text },
+                ]
+              : [{ role: 'assistant' as const, content: text }];
+
           const params = {
             apiKey,
             apiEndpoint: apiEndpoint || undefined,
             model: snapshotModel,
             messages,
             format: snapshotFormat,
-            voice: snapshotModel === 'mimo-v2.5-tts' ? snapshotVoice : undefined,
+            voice:
+              snapshotModel === 'mimo-v2.5-tts'
+                ? snapshotVoice
+                : snapshotModel === 'mimo-v2.5-tts-voiceclone'
+                  ? cloneVoiceDataUri
+                  : undefined,
             signal: controller.signal,
           };
 
@@ -391,7 +414,7 @@ export function useSynthesis() {
         setIsGenerating(false);
       }
     },
-    [model, voice, format, toast]
+    [model, voice, format, toast, cloneFile, cloneStylePrompt]
   );
 
   return {
