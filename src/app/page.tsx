@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import Link from 'next/link';
-import { TTSModel } from '@/types/tts';
+import { AppLink as Link } from '@/components/AppLink';
 import ApiKeyCard from '@/components/ApiKeyCard';
 import ModelSelector from '@/components/ModelSelector';
 import VoiceSelector from '@/components/VoiceSelector';

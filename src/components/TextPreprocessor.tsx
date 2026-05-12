@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useCallback } from 'react';
-import { Button, Collapse, Space } from 'antd';
+import { Button, Collapse } from 'antd';
 import { useToast } from '@/components/Toast';
 
 interface TextPreprocessorProps {

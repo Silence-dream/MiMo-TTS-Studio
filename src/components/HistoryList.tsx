@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { Button, Checkbox, Input, Tag, Space, Empty, Spin } from 'antd';
+import { Button, Checkbox, Input, Tag, Space, Empty } from 'antd';
 import {
   DownloadOutlined,
   DeleteOutlined,

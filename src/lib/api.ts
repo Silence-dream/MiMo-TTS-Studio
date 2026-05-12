@@ -16,13 +16,16 @@ export interface SynthesizeParams {
   signal?: AbortSignal;
 }
 
-/**
- * 非流式合成
- */
-export async function synthesizeNonStreaming(params: SynthesizeParams): Promise<Uint8Array> {
-  const { apiKey, apiEndpoint, model, messages, format, voice, signal } = params;
+function createRequestId(): string {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
 
-  const body: Record<string, unknown> = {
+function createBody(params: SynthesizeParams, stream: boolean): Record<string, unknown> {
+  const { apiEndpoint, model, messages, format, voice } = params;
+  return {
     apiEndpoint,
     model,
     messages,
@@ -30,7 +33,66 @@ export async function synthesizeNonStreaming(params: SynthesizeParams): Promise<
       format,
       ...(voice && { voice }),
     },
+    ...(stream && { stream: true }),
   };
+}
+
+async function synthesizeWithDesktop(
+  params: SynthesizeParams,
+  stream: boolean
+): Promise<Uint8Array> {
+  const desktopApi = window.mimoDesktop;
+  if (!desktopApi) {
+    throw new Error('桌面端 API 未初始化');
+  }
+
+  const requestId = createRequestId();
+  const { apiKey, apiEndpoint, model, messages, format, voice, signal } = params;
+  const cancel = () => {
+    void desktopApi.cancel(requestId);
+  };
+
+  if (signal?.aborted) {
+    cancel();
+    throw new DOMException('Aborted', 'AbortError');
+  }
+
+  signal?.addEventListener('abort', cancel, { once: true });
+
+  try {
+    const result = await desktopApi.synthesize({
+      requestId,
+      apiKey,
+      apiEndpoint,
+      model,
+      messages,
+      format,
+      voice,
+      stream,
+    });
+    return new Uint8Array(result.audioBytes);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (signal?.aborted || message.includes('AbortError')) {
+      throw new DOMException('Aborted', 'AbortError');
+    }
+    throw error;
+  } finally {
+    signal?.removeEventListener('abort', cancel);
+  }
+}
+
+/**
+ * 非流式合成
+ */
+export async function synthesizeNonStreaming(params: SynthesizeParams): Promise<Uint8Array> {
+  if (typeof window !== 'undefined' && window.mimoDesktop) {
+    return synthesizeWithDesktop(params, false);
+  }
+
+  const { apiKey, signal } = params;
+
+  const body = createBody(params, false);
 
   const response = await fetch(PROXY_ENDPOINT, {
     method: 'POST',
@@ -68,18 +130,12 @@ export async function synthesizeNonStreaming(params: SynthesizeParams): Promise<
  * 流式合成
  */
 export async function synthesizeStreaming(params: SynthesizeParams): Promise<Uint8Array> {
-  const { apiKey, apiEndpoint, model, messages, format, voice, signal } = params;
+  if (typeof window !== 'undefined' && window.mimoDesktop) {
+    return synthesizeWithDesktop(params, true);
+  }
 
-  const body: Record<string, unknown> = {
-    apiEndpoint,
-    model,
-    messages,
-    audio: {
-      format,
-      ...(voice && { voice }),
-    },
-    stream: true,
-  };
+  const { apiKey, signal } = params;
+  const body = createBody(params, true);
 
   const response = await fetch(PROXY_ENDPOINT, {
     method: 'POST',

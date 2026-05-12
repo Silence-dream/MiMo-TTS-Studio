@@ -2,7 +2,6 @@
 
 import { createContext, useContext, useMemo, ReactNode } from 'react';
 import { App } from 'antd';
-import type { MessageInstance } from 'antd/es/message/interface';
 
 interface ToastContextType {
   toast: {

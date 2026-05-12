@@ -1,0 +1,58 @@
+name: Electron Build
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  package:
+    name: Package (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows
+            os: windows-latest
+            command: pnpm dist:win
+          - platform: macos
+            os: macos-latest
+            command: pnpm dist:mac
+          - platform: linux
+            os: ubuntu-latest
+            command: pnpm dist:linux
+
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.33.2 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build web
+        run: pnpm build
+
+      - name: Package desktop
+        run: ${{ matrix.command }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mimo-tts-studio-${{ matrix.platform }}
+          path: release-desktop/**

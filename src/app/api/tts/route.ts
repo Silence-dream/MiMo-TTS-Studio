@@ -83,7 +83,6 @@ export async function POST(request: NextRequest) {
     }
 
     // 流式响应
-    const encoder = new TextEncoder();
     const reader = response.body?.getReader();
 
     if (!reader) {

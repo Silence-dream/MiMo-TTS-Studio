@@ -2,3 +2,6 @@ node_modules
 .next
 pnpm-lock.yaml
 tsconfig.tsbuildinfo
+.github/ISSUE_TEMPLATE/bug_report.yml
+.github/ISSUE_TEMPLATE/feature_request.yml
+postcss.config.mjs

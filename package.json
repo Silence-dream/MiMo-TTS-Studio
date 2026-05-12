@@ -2,11 +2,23 @@
   "name": "mimo-tts-studio",
   "version": "1.0.0",
   "description": "MiMo TTS Studio - 基于小米 MiMo-V2.5-TTS 的语音合成工具",
+  "main": "electron-dist/electron/main.js",
   "scripts": {
     "dev": "next dev --turbopack",
+    "dev:electron": "pnpm build:electron:main && concurrently -k \"pnpm dev:electron:renderer\" \"pnpm dev:electron:main\" \"pnpm dev:electron:app\"",
+    "dev:electron:renderer": "vite --config vite.electron.config.ts --host 127.0.0.1",
+    "dev:electron:main": "tsc -p tsconfig.electron.json --watch --preserveWatchOutput",
+    "dev:electron:app": "wait-on tcp:5173 electron-dist/electron/main.js && cross-env ELECTRON_RENDERER_URL=http://127.0.0.1:5173 electron electron-dist/electron/main.js",
     "build": "next build",
+    "build:electron": "pnpm build:electron:main && pnpm build:electron:renderer",
+    "build:electron:main": "tsc -p tsconfig.electron.json",
+    "build:electron:renderer": "vite build --config vite.electron.config.ts",
+    "dist:electron": "pnpm build:electron && electron-builder",
+    "dist:win": "pnpm build:electron && electron-builder --win",
+    "dist:mac": "pnpm build:electron && electron-builder --mac",
+    "dist:linux": "pnpm build:electron && electron-builder --linux",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky"
@@ -25,6 +37,57 @@
   "author": "",
   "license": "MIT",
   "packageManager": "pnpm@10.33.2",
+  "build": {
+    "appId": "com.mimo.tts-studio",
+    "productName": "MiMo TTS Studio",
+    "asar": true,
+    "directories": {
+      "output": "release-desktop"
+    },
+    "files": [
+      "electron-dist/**/*",
+      "dist-electron-renderer/**/*",
+      "package.json"
+    ],
+    "win": {
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "category": "public.app-category.productivity"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Utility",
+      "maintainer": "MiMo TTS Studio"
+    },
+    "npmRebuild": false
+  },
   "dependencies": {
     "@ant-design/icons": "^6.2.2",
     "@ant-design/nextjs-registry": "^1.3.0",
@@ -41,12 +104,21 @@
     "@types/node": "25.6.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
     "code-inspector-plugin": "^1.5.1",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^42.0.1",
+    "electron-builder": "^26.8.1",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.6",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "postcss": "^8.5.12",
     "prettier": "^3.8.3",
     "tailwindcss": "^4.2.4",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vite": "^8.0.12",
+    "wait-on": "^9.0.10"
   }
 }
