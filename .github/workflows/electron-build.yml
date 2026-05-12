@@ -1,8 +1,20 @@
 name: Electron Build
 
 on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - 'v*'
   pull_request:
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: electron-build-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   package:
@@ -56,3 +68,5 @@ jobs:
         with:
           name: mimo-tts-studio-${{ matrix.platform }}
           path: release-desktop/**
+          if-no-files-found: error
+          retention-days: 14
