@@ -101,6 +101,30 @@ pnpm build
 pnpm start
 ```
 
+### 桌面版打包与发布
+
+```bash
+# 本地开发 Electron 桌面端
+pnpm dev:electron
+
+# 构建桌面端资源
+pnpm build:electron
+
+# 按平台打包
+pnpm dist:win
+pnpm dist:mac
+pnpm dist:linux
+```
+
+推送版本标签会自动触发 GitHub Actions 打包并创建 GitHub Release：
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+Release 会自动上传 Windows、macOS、Linux 安装包。发布说明内容维护在 `.github/release-notes.md`。
+
 ## 使用指南
 
 ### 1. 配置 API Key
